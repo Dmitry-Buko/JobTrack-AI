@@ -1,0 +1,89 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+  Семантические токены дизайн-системы.
+  Утилиты генерируются через @theme inline, поэтому классы вида
+  bg-surface / text-muted / border-border работают в обеих темах.
+*/
+:root {
+  --color-bg: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f0f2f6;
+  --color-border: #e2e6ee;
+  --color-text: #101828;
+  --color-muted: #667085;
+  --color-accent: #4f46e5;
+  --color-accent-hover: #4338ca;
+  --color-accent-contrast: #ffffff;
+  --color-accent-soft: #eef2ff;
+  --color-danger: #dc2626;
+  --color-danger-hover: #b91c1c;
+  --color-danger-soft: #fef2f2;
+  --color-success: #15803d;
+  --color-success-soft: #f0fdf4;
+  --color-warning: #b45309;
+  --color-warning-soft: #fffbeb;
+}
+
+.dark {
+  --color-bg: #0e1220;
+  --color-surface: #161b2c;
+  --color-surface-muted: #1d2438;
+  --color-border: #2a324a;
+  --color-text: #e6eaf4;
+  --color-muted: #94a0b8;
+  --color-accent: #6d70f0;
+  --color-accent-hover: #8b8df5;
+  --color-accent-contrast: #ffffff;
+  --color-accent-soft: #252a52;
+  --color-danger: #f0645c;
+  --color-danger-hover: #f38680;
+  --color-danger-soft: #38201f;
+  --color-success: #4ade80;
+  --color-success-soft: #14261d;
+  --color-warning: #fbbf24;
+  --color-warning-soft: #33270f;
+}
+
+@theme inline {
+  --font-sans:
+    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-surface-muted: var(--color-surface-muted);
+  --color-border: var(--color-border);
+  --color-text: var(--color-text);
+  --color-muted: var(--color-muted);
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-contrast: var(--color-accent-contrast);
+  --color-accent-soft: var(--color-accent-soft);
+  --color-danger: var(--color-danger);
+  --color-danger-hover: var(--color-danger-hover);
+  --color-danger-soft: var(--color-danger-soft);
+  --color-success: var(--color-success);
+  --color-success-soft: var(--color-success-soft);
+  --color-warning: var(--color-warning);
+  --color-warning-soft: var(--color-warning-soft);
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+  }
+
+  body {
+    @apply bg-bg text-text antialiased;
+    min-height: 100vh;
+  }
+
+  /* Единая видимая клавиатурная фокусировка */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}

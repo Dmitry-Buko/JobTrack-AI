@@ -1,0 +1,17 @@
+node_modules
+dist
+coverage
+*.local
+
+# Переменные окружения с реальными ключами никогда не коммитим
+.env
+.env.*
+!.env.example
+
+npm-debug.log*
+yarn-error.log*
+.DS_Store
+
+# Артефакты Supabase CLI
+supabase/.branches
+supabase/.temp
