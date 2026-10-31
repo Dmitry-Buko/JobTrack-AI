@@ -1,4 +1,4 @@
-import { Check, Lightbulb, SendHorizontal, SkipForward } from 'lucide-react';
+import { Check, Lightbulb, Mic, MicOff, SendHorizontal, SkipForward } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAppDispatch } from '@/app/hooks';
@@ -20,6 +20,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
+import { cn } from '@/lib/utils';
 import { DIFFICULTY_LABELS, TOPIC_LABELS, type InterviewSession } from '@/types/interview';
 import { SKIP_ANSWER_TEXT } from '../lib/constants';
 import { subtopicLabel } from '../lib/subtopics';
@@ -33,6 +34,7 @@ import {
   type EvaluationTask,
 } from '../testSession/testSessionSlice';
 import { useEvaluationWorker } from '../testSession/useEvaluationWorker';
+import { useDictation, type DictationError } from '../testSession/useDictation';
 
 const MIN_ANSWER_LENGTH = 2;
 
@@ -92,6 +94,25 @@ export function TestSessionView({
   const answerRef = useRef<HTMLTextAreaElement>(null);
 
   useEvaluationWorker(session);
+
+  // Диктовка ответа (Web Speech API): финальные куски дописываются к ответу.
+  const dictation = useDictation({
+    language: session.language,
+    onFinalChunk: (chunk) => {
+      setAnswerDraft((current) => (current.trim() ? `${current.trimEnd()} ${chunk}` : chunk));
+    },
+    onError: (error: DictationError) => {
+      const message =
+        error === 'not-allowed'
+          ? 'Доступ к микрофону запрещён. Разрешите его в настройках браузера.'
+          : error === 'no-speech'
+            ? 'Речь не распознана — попробуйте ещё раз.'
+            : error === 'network'
+              ? 'Распознаванию нужен интернет. Проверьте подключение.'
+              : 'Диктовка недоступна. Попробуйте ещё раз.';
+      toast.error(message);
+    },
+  });
 
   const questions = useMemo(
     () => messages.filter((message) => message.role === 'assistant'),
@@ -208,6 +229,7 @@ export function TestSessionView({
     }
     setAnswerError(null);
     setSubmitting(true);
+    dictation.stop();
     const ok = await enqueueEvaluation(trimmed, currentQuestion.content, currentQuestion.subtopic);
     setSubmitting(false);
     if (ok) {
@@ -285,11 +307,14 @@ export function TestSessionView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isComplete]);
 
-  // Фокус на поле ответа и сброс таймера при смене вопроса.
+  // Фокус на поле ответа и сброс таймера при смене вопроса; диктовку останавливаем.
   useEffect(() => {
     answerRef.current?.focus();
     questionStartRef.current = Date.now();
     setElapsedSeconds(0);
+    dictation.stop();
+    // dictation.stop стабилен (useCallback).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex]);
 
   // Живой таймер текущего вопроса (раз в секунду).
@@ -415,22 +440,59 @@ export function TestSessionView({
           </p>
         )}
 
-        <textarea
-          ref={answerRef}
-          value={answerDraft}
-          onChange={(event) => setAnswerDraft(event.target.value)}
-          onKeyDown={(event) => {
-            if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
-              event.preventDefault();
-              void submitAnswer();
-            }
-          }}
-          aria-label="Ваш ответ на вопрос"
-          placeholder="Напишите ответ своими словами"
-          rows={6}
-          disabled={submitting}
-          className="squircle mt-5 w-full rounded-control bg-surface-muted px-3 py-2.5 text-[15px] text-text transition duration-200 ease-[var(--ease-ios)] placeholder:text-muted focus:bg-surface focus:ring-2 focus:ring-accent/60 focus:outline-none disabled:opacity-50"
-        />
+        <div className="relative mt-5">
+          <textarea
+            ref={answerRef}
+            value={answerDraft}
+            onChange={(event) => setAnswerDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+                event.preventDefault();
+                void submitAnswer();
+              }
+            }}
+            aria-label="Ваш ответ на вопрос"
+            placeholder="Напишите ответ своими словами"
+            rows={6}
+            disabled={submitting}
+            className="squircle w-full rounded-control bg-surface-muted px-3 py-2.5 pr-14 text-[15px] text-text transition duration-200 ease-[var(--ease-ios)] placeholder:text-muted focus:bg-surface focus:ring-2 focus:ring-accent/60 focus:outline-none disabled:opacity-50"
+          />
+          {dictation.supported && (
+            <button
+              type="button"
+              onClick={dictation.listening ? dictation.stop : dictation.start}
+              aria-pressed={dictation.listening}
+              aria-label={dictation.listening ? 'Остановить диктовку' : 'Диктовать ответ голосом'}
+              title={dictation.listening ? 'Остановить диктовку' : 'Диктовать ответ голосом'}
+              disabled={submitting}
+              className={cn(
+                'absolute bottom-2.5 right-2.5 flex size-9 items-center justify-center rounded-full',
+                'transition duration-200 ease-[var(--ease-ios)] active:scale-95',
+                'disabled:pointer-events-none disabled:opacity-40',
+                dictation.listening
+                  ? 'bg-danger text-white shadow-pop'
+                  : 'bg-surface text-muted shadow-card hover:text-text',
+              )}
+            >
+              {dictation.listening ? (
+                <>
+                  <span
+                    className="absolute inset-0 rounded-full bg-danger/50 animate-ping"
+                    aria-hidden
+                  />
+                  <MicOff className="relative size-4" strokeWidth={1.75} aria-hidden />
+                </>
+              ) : (
+                <Mic className="size-[18px]" strokeWidth={1.75} aria-hidden />
+              )}
+            </button>
+          )}
+        </div>
+        {dictation.listening && (
+          <p className="mt-1.5 text-[13px] text-muted animate-appear" aria-live="polite">
+            {dictation.interim ? `Слышу: ${dictation.interim}` : 'Слушаю… говорите, текст появится в поле'}
+          </p>
+        )}
         {answerError && (
           <p className="mt-1.5 text-[13px] text-danger-strong" role="alert">
             {answerError}
