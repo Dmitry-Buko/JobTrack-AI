@@ -8,7 +8,7 @@ import {
   languageName,
   topicLabel,
 } from '../shared/interview.ts';
-import { chatJson, OpenAIError } from '../shared/openai.ts';
+import { chatJson, GeminiError } from '../shared/gemini.ts';
 import { checkRateLimit } from '../shared/ratelimit.ts';
 import { clampText, parseBody } from '../shared/validate.ts';
 
@@ -69,6 +69,47 @@ function transcript(messages: z.infer<typeof messageSchema>[]): string {
     .join('\n');
 }
 
+/**
+ * Приводит ответ модели к строгой схеме: счётчики строками или NaN,
+ * пропущенные массивы, объекты не той формы — типичные огрехи лёгких моделей.
+ */
+function normalizeReport(raw: unknown): unknown {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  const data = { ...(raw as Record<string, unknown>) };
+
+  const toCount = (value: unknown): number => {
+    const num = Number(value);
+    return Number.isFinite(num) && num >= 0 ? Math.floor(num) : 0;
+  };
+  const stringArray = (value: unknown): string[] =>
+    Array.isArray(value)
+      ? value.filter((item): item is string => typeof item === 'string' && item.trim() !== '')
+      : [];
+
+  data.total_questions = toCount(data.total_questions);
+  data.answered_questions = toCount(data.answered_questions);
+  data.skipped_questions = toCount(data.skipped_questions);
+  data.strengths = stringArray(data.strengths);
+  data.weak_topics = stringArray(data.weak_topics);
+  data.topics_to_review = stringArray(data.topics_to_review);
+  data.recommendations = stringArray(data.recommendations);
+  data.weak_answers = Array.isArray(data.weak_answers)
+    ? data.weak_answers
+        .filter((item) => item && typeof item === 'object')
+        .map((item) => {
+          const entry = item as Record<string, unknown>;
+          return {
+            question: typeof entry.question === 'string' ? entry.question : String(entry.question ?? ''),
+            issue: typeof entry.issue === 'string' ? entry.issue : String(entry.issue ?? ''),
+          };
+        })
+        .filter((item) => item.question !== '')
+    : [];
+  if (typeof data.summary !== 'string') data.summary = '';
+  if (typeof data.conclusion !== 'string') data.conclusion = '';
+  return data;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return handleOptions();
   if (req.method !== 'POST') return jsonError(405, 'Метод не поддерживается.');
@@ -106,13 +147,13 @@ Deno.serve(async (req) => {
       3000,
     );
 
-    const parsed = reportSchema.safeParse(raw);
+    const parsed = reportSchema.safeParse(normalizeReport(raw));
     if (!parsed.success) {
       return jsonError(502, 'AI вернул отчёт в неожиданном формате. Попробуйте ещё раз.');
     }
     return jsonOk(parsed.data);
   } catch (error) {
-    const message = error instanceof OpenAIError ? error.message : 'AI-сервис недоступен. Попробуйте позже.';
+    const message = error instanceof GeminiError ? error.message : 'AI-сервис недоступен. Попробуйте позже.';
     return jsonError(502, message);
   }
 });

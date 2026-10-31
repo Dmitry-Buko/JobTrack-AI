@@ -167,7 +167,7 @@ export function VoiceSessionView({
         <Card className="p-6">
           <p className="flex items-start gap-2 rounded-lg bg-surface-muted px-3 py-2.5 text-xs leading-relaxed text-muted">
             <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
-            Аудио обрабатывается внешним AI-сервисом OpenAI и не сохраняется. В историю тренировок
+            Аудио обрабатывается внешним AI-сервисом Google (Gemini) и не сохраняется. В историю тренировок
             попадает только текстовая расшифровка диалога и итоговая оценка.
           </p>
 

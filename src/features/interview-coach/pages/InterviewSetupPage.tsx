@@ -120,7 +120,7 @@ export function InterviewSetupPage() {
             <p className="flex items-start gap-2 rounded-lg bg-surface-muted px-3 py-2.5 text-xs leading-relaxed text-muted">
               <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
               Голосовое собеседование: доступ к микрофону запрашивается после нажатия «Начать».
-              Аудио обрабатывается внешним AI-сервисом OpenAI; сами записи не сохраняются — в
+              Аудио обрабатывается внешним AI-сервисом Google (Gemini); сами записи не сохраняются — в
               историю попадает только текстовая расшифровка и результаты оценки.
             </p>
           )}

@@ -21,6 +21,18 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   user_not_found: 'Пользователь с таким email не найден.',
 };
 
+/** Сообщения Supabase Auth на английском → русский (для ошибок без кода). */
+const MESSAGE_TRANSLATIONS: Record<string, string> = {
+  'Email not confirmed':
+    'Email не подтверждён. Проверьте почту — мы отправили ссылку для подтверждения.',
+  'Invalid login credentials': 'Неверный email или пароль.',
+  'User already registered': 'Пользователь с таким email уже зарегистрирован.',
+  'Password should be at least 6 characters':
+    'Пароль слишком простой. Используйте минимум 6 символов.',
+  'New password should be different from the old password.':
+    'Новый пароль совпадает с текущим.',
+};
+
 export function getErrorMessage(
   error: unknown,
   fallback = 'Что-то пошло не так. Попробуйте ещё раз.',
@@ -40,6 +52,10 @@ export function getErrorMessage(
       }
       if (message.includes('Unexpected token') || message.includes('invalid JSON')) {
         return 'Сервер вернул некорректный ответ. Попробуйте позже.';
+      }
+      if (MESSAGE_TRANSLATIONS[message]) return MESSAGE_TRANSLATIONS[message];
+      if (message.includes('is invalid') && message.includes('Email address')) {
+        return 'Supabase отклонил этот email-адрес. Используйте настоящий адрес почты.';
       }
       return message;
     }

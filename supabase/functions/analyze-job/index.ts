@@ -2,7 +2,7 @@ import { z } from 'npm:zod@3';
 
 import { requireUser } from '../shared/auth.ts';
 import { handleOptions, jsonError, jsonOk } from '../shared/cors.ts';
-import { chatJson, OpenAIError } from '../shared/openai.ts';
+import { chatJson, GeminiError } from '../shared/gemini.ts';
 import { checkRateLimit } from '../shared/ratelimit.ts';
 import { clampText, parseBody } from '../shared/validate.ts';
 
@@ -30,6 +30,41 @@ const analysisSchema = z.object({
   preparation_recommendations: z.array(z.string()),
   possible_interview_questions: z.array(z.string()),
 });
+
+/**
+ * Приводит ответ модели к строгой схеме: лёгкие модели пропускают массивы,
+ * путают названия ключей или возвращают строки вместо объектов.
+ */
+function normalizeAnalysis(raw: unknown): unknown {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  const data = { ...(raw as Record<string, unknown>) };
+
+  const objectArray = (value: unknown): Record<string, unknown>[] =>
+    Array.isArray(value) ? value.filter((item) => item && typeof item === 'object') : [];
+  const stringArray = (value: unknown): string[] =>
+    Array.isArray(value)
+      ? value.filter((item): item is string => typeof item === 'string' && item.trim() !== '')
+      : [];
+  const text = (value: unknown): string =>
+    typeof value === 'string' ? value : value == null ? '' : String(value);
+
+  if (typeof data.summary !== 'string') data.summary = text(data.summary);
+
+  data.matched_skills = objectArray(data.matched_skills)
+    .map((item) => ({ name: text(item.name), comment: text(item.comment ?? item.note) }))
+    .filter((item) => item.name !== '');
+
+  const requirementArray = (value: unknown) =>
+    objectArray(value)
+      .map((item) => ({ requirement: text(item.requirement ?? item.name), note: text(item.note ?? item.comment) }))
+      .filter((item) => item.requirement !== '');
+
+  data.unconfirmed_requirements = requirementArray(data.unconfirmed_requirements);
+  data.needs_verification = requirementArray(data.needs_verification);
+  data.preparation_recommendations = stringArray(data.preparation_recommendations);
+  data.possible_interview_questions = stringArray(data.possible_interview_questions);
+  return data;
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return handleOptions();
@@ -67,18 +102,19 @@ Deno.serve(async (req) => {
         '- preparation_recommendations: конкретные шаги по подготовке;\n' +
         '- possible_interview_questions: 5–8 вероятных вопросов интервьюера по этой вакансии.\n' +
         'Используй только требования из описания вакансии, ничего не выдумывай. Пиши по-русски.\n' +
-        'Верни JSON с ключами: summary, matched_skills, unconfirmed_requirements, needs_verification, ' +
-        'preparation_recommendations, possible_interview_questions.',
+        'Формат ответа (ключи и структура точно такие): {"summary":"...","matched_skills":[{"name":"...","comment":"..."}],' +
+        '"unconfirmed_requirements":[{"requirement":"...","note":"..."}],"needs_verification":[{"requirement":"...","note":"..."}],' +
+        '"preparation_recommendations":["..."],"possible_interview_questions":["..."]}',
       3000,
     );
 
-    const parsed = analysisSchema.safeParse(raw);
+    const parsed = analysisSchema.safeParse(normalizeAnalysis(raw));
     if (!parsed.success) {
       return jsonError(502, 'AI вернул анализ в неожиданном формате. Попробуйте ещё раз.');
     }
     return jsonOk(parsed.data);
   } catch (error) {
-    const message = error instanceof OpenAIError ? error.message : 'AI-сервис недоступен. Попробуйте позже.';
+    const message = error instanceof GeminiError ? error.message : 'AI-сервис недоступен. Попробуйте позже.';
     return jsonError(502, message);
   }
 });

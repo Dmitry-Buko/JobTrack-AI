@@ -65,7 +65,8 @@ export const analysisResponseSchema = z.object({
 export const realtimeSessionResponseSchema = z.object({
   token: z.string().min(1),
   model: z.string().min(1),
-  expires_at: z.number().optional(),
+  // Gemini не всегда возвращает срок жизни токена — поле может отсутствовать или быть null.
+  expires_at: z.number().nullable().optional(),
 });
 
 export type ParseResult<T> =

@@ -8,13 +8,14 @@ import {
   languageName,
   topicLabel,
 } from '../shared/interview.ts';
-import { chatJson, OpenAIError } from '../shared/openai.ts';
+import { chatJson, GeminiError } from '../shared/gemini.ts';
 import { checkRateLimit } from '../shared/ratelimit.ts';
 import { clampText, parseBody } from '../shared/validate.ts';
 
 const bodySchema = z.object({
   question: z.string().min(1).max(2000),
-  answer: z.string().max(8000),
+  // В режиме подсказки (hint) ответа ещё нет — поле необязательное.
+  answer: z.string().max(8000).optional(),
   topic: z.enum([
     'javascript',
     'typescript',
@@ -61,6 +62,39 @@ const evaluationSchema = z.object({
   follow_up_question: z.string().nullable(),
 });
 
+/**
+ * Приводит ответ модели к строгой схеме: модели (особенно лёгкие) возвращают
+ * оценки числами вместо объектов, пропускают comment или follow_up_question.
+ */
+function normalizeEvaluation(raw: unknown): unknown {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  const data = { ...(raw as Record<string, unknown>) };
+
+  if (data.scores && typeof data.scores === 'object' && !Array.isArray(data.scores)) {
+    const scores: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(data.scores as Record<string, unknown>)) {
+      if (typeof value === 'number') {
+        scores[key] = { score: Math.min(5, Math.max(1, Math.round(value))), comment: '' };
+      } else if (value && typeof value === 'object') {
+        const entry = value as Record<string, unknown>;
+        const comment = typeof entry.comment === 'string' ? entry.comment : '';
+        if (entry.status === 'insufficient_data') {
+          scores[key] = { status: 'insufficient_data', comment };
+        } else if (typeof entry.score === 'number') {
+          scores[key] = { score: Math.min(5, Math.max(1, Math.round(entry.score))), comment };
+        }
+      }
+    }
+    data.scores = scores;
+  }
+
+  if (typeof data.follow_up_question !== 'string') data.follow_up_question = null;
+  if (!Array.isArray(data.strengths)) data.strengths = [];
+  if (!Array.isArray(data.gaps)) data.gaps = [];
+  if (typeof data.model_answer !== 'string') data.model_answer = '';
+  return data;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return handleOptions();
   if (req.method !== 'POST') return jsonError(405, 'Метод не поддерживается.');
@@ -78,7 +112,7 @@ Deno.serve(async (req) => {
 
   const { question, answer, topic, difficulty, language, hint } = body.data;
   const questionText = clampText(question, 2000);
-  const answerText = clampText(answer);
+  const answerText = typeof answer === 'string' ? clampText(answer) : '';
 
   try {
     if (hint) {
@@ -115,17 +149,21 @@ Deno.serve(async (req) => {
         'В strengths перечисли, что кандидат сказал правильно; в gaps — неточности и пробелы. ' +
         'В model_answer дай эталонный ответ, уместный для указанного уровня. ' +
         'Если уместно задать один уточняющий вопрос — укажи его в follow_up_question, иначе null.\n' +
+        'Формат scores (обязателен точно такой): {"correctness":{"score":4,"comment":"..."},' +
+        '"completeness":{"score":3,"comment":"..."},"understanding":{"score":4,"comment":"..."},' +
+        '"practical_application":{"status":"insufficient_data","comment":"..."},' +
+        '"explanation_quality":{"score":5,"comment":"..."}}.\n' +
         'Верни JSON с ключами: scores, strengths, gaps, model_answer, follow_up_question.',
       3500,
     );
 
-    const parsed = evaluationSchema.safeParse(raw);
+    const parsed = evaluationSchema.safeParse(normalizeEvaluation(raw));
     if (!parsed.success) {
       return jsonError(502, 'AI вернул оценку в неожиданном формате. Попробуйте отправить ответ ещё раз.');
     }
     return jsonOk(parsed.data);
   } catch (error) {
-    const message = error instanceof OpenAIError ? error.message : 'AI-сервис недоступен. Попробуйте позже.';
+    const message = error instanceof GeminiError ? error.message : 'AI-сервис недоступен. Попробуйте позже.';
     return jsonError(502, message);
   }
 });

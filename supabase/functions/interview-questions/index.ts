@@ -1,6 +1,6 @@
 import { handleOptions, jsonError, jsonOk } from '../shared/cors.ts';
 import { requireUser } from '../shared/auth.ts';
-import { chatJson, maxQuestions, OpenAIError } from '../shared/openai.ts';
+import { chatJson, GeminiError, maxQuestions } from '../shared/gemini.ts';
 import { checkRateLimit } from '../shared/ratelimit.ts';
 import { clampText, parseBody } from '../shared/validate.ts';
 import {
@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
     }
     return jsonOk({ questions: parsed.data.questions.slice(0, questionCount) });
   } catch (error) {
-    const message = error instanceof OpenAIError ? error.message : 'AI-сервис недоступен. Попробуйте позже.';
+    const message = error instanceof GeminiError ? error.message : 'AI-сервис недоступен. Попробуйте позже.';
     return jsonError(502, message);
   }
 });
