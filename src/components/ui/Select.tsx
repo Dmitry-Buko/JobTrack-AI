@@ -17,7 +17,7 @@ export function Select({ label, error, hint, className, id, children, ...rest }:
   return (
     <div className="space-y-1.5">
       {label && (
-        <label htmlFor={selectId} className="block text-sm font-medium text-text">
+        <label htmlFor={selectId} className="block text-[13px] font-medium text-muted">
           {label}
         </label>
       )}
@@ -26,10 +26,11 @@ export function Select({ label, error, hint, className, id, children, ...rest }:
           id={selectId}
           aria-invalid={error ? true : undefined}
           className={cn(
-            'h-10 w-full appearance-none rounded-lg border bg-surface px-3 pr-9 text-sm text-text',
-            'disabled:cursor-not-allowed disabled:bg-surface-muted',
-            'focus:outline-none focus:ring-2 focus:ring-accent/40',
-            error ? 'border-danger' : 'border-border',
+            'squircle h-10 w-full appearance-none rounded-control bg-surface-muted px-3 pr-9 text-[15px] text-text',
+            'transition duration-200 ease-[var(--ease-ios)]',
+            'disabled:cursor-not-allowed disabled:opacity-50',
+            'focus:bg-surface focus:outline-none focus:ring-2 focus:ring-accent/60',
+            error && 'ring-2 ring-danger/70',
             className,
           )}
           {...rest}
@@ -38,13 +39,14 @@ export function Select({ label, error, hint, className, id, children, ...rest }:
         </select>
         <ChevronDown
           className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted"
+          strokeWidth={1.75}
           aria-hidden
         />
       </div>
       {error ? (
-        <p className="text-sm text-danger">{error}</p>
+        <p className="text-[13px] text-danger-strong">{error}</p>
       ) : hint ? (
-        <p className="text-sm text-muted">{hint}</p>
+        <p className="text-[13px] text-muted">{hint}</p>
       ) : null}
     </div>
   );

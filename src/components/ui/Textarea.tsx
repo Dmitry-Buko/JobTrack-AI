@@ -15,7 +15,7 @@ export function Textarea({ label, error, hint, className, id, ...rest }: Textare
   return (
     <div className="space-y-1.5">
       {label && (
-        <label htmlFor={areaId} className="block text-sm font-medium text-text">
+        <label htmlFor={areaId} className="block text-[13px] font-medium text-muted">
           {label}
         </label>
       )}
@@ -24,20 +24,21 @@ export function Textarea({ label, error, hint, className, id, ...rest }: Textare
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${areaId}-error` : hint ? `${areaId}-hint` : undefined}
         className={cn(
-          'min-h-24 w-full rounded-lg border bg-surface px-3 py-2 text-sm text-text',
-          'placeholder:text-muted/70 disabled:cursor-not-allowed disabled:bg-surface-muted',
-          'focus:outline-none focus:ring-2 focus:ring-accent/40',
-          error ? 'border-danger' : 'border-border',
+          'squircle min-h-24 w-full rounded-control bg-surface-muted px-3 py-2.5 text-[15px] text-text',
+          'transition duration-200 ease-[var(--ease-ios)]',
+          'placeholder:text-muted disabled:cursor-not-allowed disabled:opacity-50',
+          'focus:bg-surface focus:outline-none focus:ring-2 focus:ring-accent/60',
+          error && 'ring-2 ring-danger/70',
           className,
         )}
         {...rest}
       />
       {error ? (
-        <p id={`${areaId}-error`} className="text-sm text-danger">
+        <p id={`${areaId}-error`} className="text-[13px] text-danger-strong">
           {error}
         </p>
       ) : hint ? (
-        <p id={`${areaId}-hint`} className="text-sm text-muted">
+        <p id={`${areaId}-hint`} className="text-[13px] text-muted">
           {hint}
         </p>
       ) : null}

@@ -1,3 +1,14 @@
+import {
+  Bookmark,
+  CircleSlash,
+  ClipboardList,
+  Filter,
+  Handshake,
+  MessagesSquare,
+  Send,
+  type LucideIcon,
+} from 'lucide-react';
+
 export const APPLICATION_STATUSES = [
   'saved',
   'applied',
@@ -20,43 +31,52 @@ export interface StatusMeta {
   label: string;
   badgeClass: string;
   dotClass: string;
+  /** Иконка статуса: различает статусы не только цветом. */
+  icon: LucideIcon;
 }
 
 export const APPLICATION_STATUS_META: Record<ApplicationStatus, StatusMeta> = {
   saved: {
     label: 'Сохранена',
-    badgeClass: 'border-border bg-surface-muted text-muted',
-    dotClass: 'bg-muted',
+    badgeClass: 'bg-neutral-soft text-neutral-strong',
+    dotClass: 'bg-neutral',
+    icon: Bookmark,
   },
   applied: {
     label: 'Отклик отправлен',
-    badgeClass: 'border-accent/30 bg-accent-soft text-accent',
+    badgeClass: 'bg-accent-soft text-accent',
     dotClass: 'bg-accent',
+    icon: Send,
   },
   screening: {
     label: 'Первичный отбор',
-    badgeClass: 'border-warning/30 bg-warning-soft text-warning',
+    badgeClass: 'bg-warning-soft text-warning-strong',
     dotClass: 'bg-warning',
+    icon: Filter,
   },
   interview: {
     label: 'Собеседование',
-    badgeClass: 'border-accent/30 bg-accent-soft text-accent',
-    dotClass: 'bg-accent',
+    badgeClass: 'bg-indigo-soft text-indigo',
+    dotClass: 'bg-indigo',
+    icon: MessagesSquare,
   },
   test_task: {
     label: 'Тестовое задание',
-    badgeClass: 'border-warning/30 bg-warning-soft text-warning',
-    dotClass: 'bg-warning',
+    badgeClass: 'bg-yellow-soft text-yellow-strong',
+    dotClass: 'bg-yellow',
+    icon: ClipboardList,
   },
   offer: {
     label: 'Оффер',
-    badgeClass: 'border-success/30 bg-success-soft text-success',
+    badgeClass: 'bg-success-soft text-success-strong',
     dotClass: 'bg-success',
+    icon: Handshake,
   },
   rejected: {
     label: 'Отказ',
-    badgeClass: 'border-danger/30 bg-danger-soft text-danger',
+    badgeClass: 'bg-danger-soft text-danger-strong',
     dotClass: 'bg-danger',
+    icon: CircleSlash,
   },
 };
 
@@ -73,9 +93,9 @@ export const PRIORITY_LABELS: Record<ApplicationPriority, string> = {
 };
 
 export const PRIORITY_BADGE_CLASSES: Record<ApplicationPriority, string> = {
-  low: 'border-border bg-surface-muted text-muted',
-  medium: 'border-warning/30 bg-warning-soft text-warning',
-  high: 'border-danger/30 bg-danger-soft text-danger',
+  low: 'bg-neutral-soft text-neutral-strong',
+  medium: 'bg-warning-soft text-warning-strong',
+  high: 'bg-danger-soft text-danger-strong',
 };
 
 /** Строка таблицы applications (имена полей совпадают с колонками БД). */

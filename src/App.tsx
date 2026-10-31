@@ -7,10 +7,10 @@ import { AppRoutes } from './app/routes';
 function SetupScreen() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg px-4">
-      <div className="w-full max-w-lg rounded-xl border border-border bg-surface p-8 text-center">
-        <h1 className="text-lg font-semibold text-text">JobTrack AI не настроен</h1>
-        <p className="mt-2 text-sm text-muted">{ENV_ERROR_MESSAGE}</p>
-        <p className="mt-4 rounded-lg bg-surface-muted p-3 text-left font-mono text-xs text-muted">
+      <div className="squircle w-full max-w-lg rounded-card bg-surface p-8 text-center shadow-card">
+        <h1 className="text-[22px] font-bold tracking-[-0.01em] text-text">JobTrack AI не настроен</h1>
+        <p className="mt-2 text-[15px] text-muted">{ENV_ERROR_MESSAGE}</p>
+        <p className="mt-4 rounded-control bg-surface-muted p-3 text-left font-mono text-[13px] text-muted">
           cp .env.example .env
         </p>
       </div>

@@ -14,11 +14,13 @@ export function AuthCard({
   footer?: ReactNode;
 }) {
   return (
-    <Card className="p-6 sm:p-8">
-      <h1 className="text-xl font-semibold tracking-tight text-text">{title}</h1>
-      {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
+    <Card className="squircle p-6 sm:p-8">
+      <h1 className="text-[28px] leading-tight font-bold tracking-[-0.02em] text-text">{title}</h1>
+      {subtitle && <p className="mt-1.5 text-[15px] text-muted">{subtitle}</p>}
       <div className="mt-6">{children}</div>
-      {footer && <div className="mt-6 border-t border-border pt-4 text-center text-sm">{footer}</div>}
+      {footer && (
+        <div className="mt-6 border-t border-separator pt-4 text-center text-[15px]">{footer}</div>
+      )}
     </Card>
   );
 }

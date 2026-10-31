@@ -1,0 +1,8 @@
+# Настройки Netlify для SPA на React Router.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Переменные сборки задаём в Netlify UI (Site settings → Environment):
+# VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY

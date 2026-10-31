@@ -15,3 +15,6 @@ yarn-error.log*
 # Артефакты Supabase CLI
 supabase/.branches
 supabase/.temp
+
+# Локальные живые тесты с зашитыми учётными данными
+contract-test.mjs

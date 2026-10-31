@@ -1,4 +1,4 @@
-import { Info, Mic, MicOff, PhoneOff, Radio, RotateCcw } from 'lucide-react';
+import { Info, Mic, MicOff, PhoneOff, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -10,7 +10,7 @@ import { useGenerateReportMutation } from '@/features/ai/api/aiApi';
 import { useGetApplicationsQuery } from '@/features/applications/api/applicationsApi';
 import { assembleReport } from '@/features/ai/lib/report';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent } from '@/components/ui/Card';
+import { Card } from '@/components/ui/Card';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
@@ -36,37 +36,67 @@ const EMPTY_REPORT: SessionReport = {
   conclusion: '',
 };
 
-const STATUS_LABELS = {
-  idle: 'Готово к запуску',
-  connecting: 'Подключение…',
-  listening: 'Слушаю вас',
-  ai_speaking: 'ИИ отвечает',
-  error: 'Ошибка',
-} as const;
+type VoiceStatus = 'idle' | 'connecting' | 'listening' | 'ai_speaking' | 'error';
 
-function StatusIndicator({ status }: { status: keyof typeof STATUS_LABELS }) {
+/**
+ * Индикатор состояния в духе «Dynamic Island»: тёмная капсула с подписью
+ * и живой волной. Это только представление уже существующего статуса сессии.
+ */
+function VoiceStatusIsland({ status, muted }: { status: VoiceStatus; muted: boolean }) {
+  const label =
+    status === 'connecting'
+      ? 'Подключение…'
+      : status === 'listening' && muted
+        ? 'Микрофон выключен'
+        : status === 'listening'
+          ? 'Слушаю'
+          : status === 'ai_speaking'
+            ? 'Отвечаю'
+            : status === 'error'
+              ? 'Ошибка'
+              : 'Готово к запуску';
+
+  const dotClass =
+    status === 'listening'
+      ? muted
+        ? 'bg-white/40'
+        : 'bg-success'
+      : status === 'ai_speaking'
+        ? 'bg-[#0a84ff]'
+        : status === 'error'
+          ? 'bg-danger'
+          : 'bg-white/40';
+
+  const waveActive = (status === 'listening' && !muted) || status === 'ai_speaking';
+
   return (
     <div
-      className="flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-sm font-medium"
+      className={cn(
+        'sticky top-[64px] z-20 mx-auto flex w-fit items-center gap-2.5 rounded-full bg-black px-4 py-2',
+        'text-[13px] font-medium text-white shadow-raised lg:top-3',
+      )}
       role="status"
       aria-live="polite"
     >
-      {status === 'connecting' && <Spinner className="size-4" />}
-      {status === 'listening' && (
-        <span className="relative flex size-2.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
-          <span className="relative inline-flex size-2.5 rounded-full bg-success" />
-        </span>
+      {status === 'connecting' ? <Spinner className="size-3.5" /> : (
+        <span className={cn('size-2 shrink-0 rounded-full transition-colors', dotClass)} aria-hidden />
       )}
-      {status === 'ai_speaking' && (
-        <span className="relative flex size-2.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
-          <span className="relative inline-flex size-2.5 rounded-full bg-accent" />
-        </span>
-      )}
-      {status === 'error' && <span className="size-2.5 rounded-full bg-danger" />}
-      {status === 'idle' && <span className="size-2.5 rounded-full bg-muted" />}
-      {STATUS_LABELS[status]}
+      {label}
+      <span className="flex h-3.5 items-center gap-[3px]" aria-hidden>
+        {[0, 1, 2, 3, 4].map((bar) => (
+          <span
+            key={bar}
+            className={cn(
+              'w-[3px] rounded-full transition-colors',
+              waveActive ? 'bg-white animate-wave' : 'bg-white/25',
+            )}
+            style={{
+              height: waveActive ? '100%' : '40%',
+              animationDelay: `${bar * 110}ms`,
+            }}
+          />
+        ))}
+      </span>
     </div>
   );
 }
@@ -155,9 +185,11 @@ export function VoiceSessionView({
     // Стартовый экран: микрофон запрашивается только после нажатия кнопки.
     return (
       <div className="mx-auto max-w-2xl space-y-5">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Голосовое собеседование</h1>
-          <p className="mt-1 text-sm text-muted">
+        <VoiceStatusIsland status={realtime.status} muted={realtime.muted} />
+
+        <div className="pt-2">
+          <h1>Голосовое собеседование</h1>
+          <p className="mt-1 text-[15px] text-muted">
             {TOPIC_LABELS[session.topic]} · {DIFFICULTY_LABELS[session.difficulty]} ·{' '}
             {session.question_count} вопросов
             {application ? ` · ${application.company} — ${application.position}` : ''}
@@ -165,8 +197,8 @@ export function VoiceSessionView({
         </div>
 
         <Card className="p-6">
-          <p className="flex items-start gap-2 rounded-lg bg-surface-muted px-3 py-2.5 text-xs leading-relaxed text-muted">
-            <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <p className="flex items-start gap-2 rounded-control bg-surface-muted px-3 py-2.5 text-[13px] leading-relaxed text-muted">
+            <Info className="mt-0.5 size-4 shrink-0" strokeWidth={1.75} aria-hidden />
             Аудио обрабатывается внешним AI-сервисом Google (Gemini) и не сохраняется. В историю тренировок
             попадает только текстовая расшифровка диалога и итоговая оценка.
           </p>
@@ -174,14 +206,14 @@ export function VoiceSessionView({
           <Button
             size="lg"
             className="mt-5 w-full"
-            icon={<Mic className="size-5" aria-hidden />}
+            icon={<Mic className="size-5" strokeWidth={1.75} aria-hidden />}
             onClick={() => void realtime.start()}
             loading={realtime.status === 'connecting'}
           >
             Начать голосовое собеседование
           </Button>
 
-          <p className="mt-3 text-center text-xs text-muted">
+          <p className="mt-3 text-center text-[13px] text-muted">
             Нажимая кнопку, вы разрешаете доступ к микрофону этому сайту.
           </p>
         </Card>
@@ -191,23 +223,24 @@ export function VoiceSessionView({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <VoiceStatusIsland status={realtime.status} muted={realtime.muted} />
+
+      <div className="flex flex-wrap items-end justify-between gap-3 pt-1">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">
+          <p className="text-[22px] leading-tight font-semibold tracking-[-0.01em] text-text">
             {TOPIC_LABELS[session.topic]} · {DIFFICULTY_LABELS[session.difficulty]}
-          </h1>
+          </p>
           {application && (
-            <p className="mt-0.5 text-sm text-muted">
+            <p className="mt-0.5 text-[15px] text-muted">
               Подготовка к: {application.company} — {application.position}
             </p>
           )}
         </div>
-        <StatusIndicator status={realtime.status} />
       </div>
 
       {realtime.status === 'error' && realtime.error && (
-        <Card className="border-danger/40 bg-danger-soft p-4">
-          <p role="alert" className="text-sm text-danger">
+        <Card className="bg-danger-soft p-4 shadow-card">
+          <p role="alert" className="text-[15px] text-danger-strong">
             {realtime.error}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -215,7 +248,7 @@ export function VoiceSessionView({
               variant="secondary"
               size="sm"
               onClick={() => void realtime.start()}
-              icon={<RotateCcw className="size-4" aria-hidden />}
+              icon={<RotateCcw className="size-4" strokeWidth={1.75} aria-hidden />}
             >
               Повторить подключение
             </Button>
@@ -228,55 +261,52 @@ export function VoiceSessionView({
         </Card>
       )}
 
-      <Card className="p-5">
-        <div className="flex items-start gap-3">
-          <Radio
-            className={cn(
-              'mt-0.5 size-5 shrink-0',
-              realtime.status === 'listening' ? 'text-success' : 'text-muted',
-            )}
-            aria-hidden
-          />
-          <div>
-            <p className="text-xs font-medium text-muted">
-              {realtime.status === 'ai_speaking' ? 'ИИ сейчас говорит:' : 'Текущий вопрос:'}
-            </p>
-            <p className="mt-1 whitespace-pre-wrap text-base leading-relaxed text-text">
-              {realtime.currentQuestion?.text ?? 'ИИ готовит первый вопрос…'}
-            </p>
-          </div>
-        </div>
-      </Card>
+      {/* Текущий вопрос: спокойно и крупно */}
+      <section className="squircle rounded-card bg-surface p-5 shadow-card">
+        <p className="text-[13px] font-semibold tracking-[0.01em] text-accent uppercase">
+          {realtime.status === 'ai_speaking' ? 'ИИ сейчас говорит' : 'Текущий вопрос'}
+        </p>
+        <p className="mt-2 text-[20px] leading-snug font-semibold tracking-[-0.01em] text-text">
+          {realtime.currentQuestion?.text ?? 'ИИ готовит первый вопрос…'}
+        </p>
+      </section>
 
-      <Card>
-        <CardContent className="pt-5">
-          <h2 className="mb-3 text-sm font-semibold text-text">Расшифровка диалога</h2>
-          {realtime.transcript.length === 0 ? (
-            <p className="text-sm text-muted">
-              Здесь появится текстовая расшифровка — она сохранится в историю тренировки.
-            </p>
-          ) : (
-            <ul className="space-y-3">
-              {realtime.transcript.map((line) => (
-                <li
-                  key={line.id}
+      <section>
+        <p className="mb-1.5 px-1 text-[13px] font-medium tracking-[0.02em] text-muted uppercase">
+          Расшифровка диалога
+        </p>
+        {realtime.transcript.length === 0 ? (
+          <p className="px-1 text-[15px] text-muted">
+            Здесь появится текстовая расшифровка — она сохранится в историю тренировки.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {realtime.transcript.map((line) => (
+              <div
+                key={line.id}
+                className={cn(
+                  'max-w-[85%] animate-appear sm:max-w-[75%]',
+                  line.role === 'user' && 'ml-auto',
+                )}
+              >
+                <div
                   className={cn(
-                    'rounded-xl border p-3 text-sm leading-relaxed',
+                    'squircle px-4 py-3 text-[15px] leading-relaxed',
                     line.role === 'assistant'
-                      ? 'border-accent/30 bg-accent-soft/60 text-text'
-                      : 'border-border bg-surface text-text',
+                      ? 'rounded-[20px] rounded-tl-[8px] bg-surface-muted text-text shadow-card'
+                      : 'rounded-[20px] rounded-tr-[8px] bg-accent text-accent-contrast',
                   )}
                 >
-                  <p className="mb-1 text-xs font-medium text-muted">
+                  <p className="mb-0.5 text-[12px] font-medium opacity-60">
                     {line.role === 'assistant' ? 'Интервьюер' : 'Вы'}
                   </p>
                   {line.text}
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       <div className="flex flex-wrap items-center justify-center gap-3 pb-4">
         <Button
@@ -285,9 +315,9 @@ export function VoiceSessionView({
           onClick={realtime.toggleMute}
           icon={
             realtime.muted ? (
-              <MicOff className="size-5 text-danger" aria-hidden />
+              <MicOff className="size-5 text-danger-strong" strokeWidth={1.75} aria-hidden />
             ) : (
-              <Mic className="size-5" aria-hidden />
+              <Mic className="size-5" strokeWidth={1.75} aria-hidden />
             )
           }
         >
@@ -298,7 +328,7 @@ export function VoiceSessionView({
           variant="danger"
           onClick={() => setConfirmOpen(true)}
           disabled={finishing}
-          icon={<PhoneOff className="size-5" aria-hidden />}
+          icon={<PhoneOff className="size-5" strokeWidth={1.75} aria-hidden />}
         >
           Завершить сессию
         </Button>

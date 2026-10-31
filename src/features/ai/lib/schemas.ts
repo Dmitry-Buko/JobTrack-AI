@@ -33,7 +33,14 @@ export const evaluationResponseSchema = z.object({
 });
 
 export const questionsResponseSchema = z.object({
-  questions: z.array(z.string().min(1)).min(1),
+  questions: z
+    .array(
+      z.object({
+        question: z.string().min(1),
+        subtopic: z.string().nullable(),
+      }),
+    )
+    .min(1),
 });
 
 export const hintResponseSchema = z.object({

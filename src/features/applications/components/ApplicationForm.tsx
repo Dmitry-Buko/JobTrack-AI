@@ -155,7 +155,7 @@ export function ApplicationForm({
       />
 
       {serverError && (
-        <p role="alert" className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">
+        <p role="alert" className="rounded-control bg-danger-soft px-3 py-2 text-[15px] text-danger-strong">
           {serverError}
         </p>
       )}

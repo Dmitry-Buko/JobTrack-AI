@@ -91,15 +91,15 @@ export function ApplicationDetailPage() {
     <div className="space-y-5">
       <Link
         to="/applications"
-        className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-text"
+        className="inline-flex items-center gap-1.5 text-[15px] font-medium text-accent transition-colors hover:text-accent-hover"
       >
-        <ArrowLeft className="size-4" aria-hidden />
+        <ArrowLeft className="size-4" strokeWidth={1.75} aria-hidden />
         К списку вакансий
       </Link>
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight">{application.position}</h1>
+          <h1 className="max-w-2xl">{application.position}</h1>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
             <span className="font-medium text-text">{application.company}</span>
             {application.url && (
@@ -135,7 +135,7 @@ export function ApplicationDetailPage() {
           </Link>
           <Button
             variant="ghost"
-            className="text-danger hover:bg-danger-soft"
+            className="text-danger-strong hover:bg-danger-soft hover:text-danger-strong"
             icon={<Trash2 className="size-4" aria-hidden />}
             onClick={() => setConfirmOpen(true)}
           >
@@ -208,7 +208,7 @@ export function ApplicationDetailPage() {
               вакансии.
             </p>
           ) : (
-            <ul className="divide-y divide-border">
+            <ul className="divide-y divide-separator">
               {relatedSessions.map((session) => (
                 <li key={session.id}>
                   <Link

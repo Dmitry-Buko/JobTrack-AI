@@ -5,6 +5,8 @@ import { PageLoader } from '@/components/ui/PageLoader';
 
 import { useGetSessionQuery } from '../api/sessionsApi';
 import { SessionReportView } from '../components/SessionReportView';
+import { TestResultsView } from '../components/TestResultsView';
+import { TestSessionView } from '../components/TestSessionView';
 import { TextSessionView } from '../components/TextSessionView';
 import { VoiceSessionView } from '../components/VoiceSessionView';
 
@@ -28,13 +30,23 @@ export function InterviewSessionPage() {
     );
   }
 
+  // Завершённые тесты — экран результатов с разбором по вопросам.
   if (session.status !== 'active') {
-    return <SessionReportView session={session} />;
+    return session.format === 'test' ? (
+      <TestResultsView session={session} />
+    ) : (
+      <SessionReportView session={session} />
+    );
   }
 
   if (session.mode === 'voice') {
     return <VoiceSessionView session={session} onFinished={() => void refetch()} />;
   }
 
-  return <TextSessionView session={session} onFinished={() => void refetch()} />;
+  // Старые текстовые сессии (format = null) открываются в прежнем диалоговом виде.
+  return session.format === 'test' ? (
+    <TestSessionView session={session} onFinished={() => void refetch()} />
+  ) : (
+    <TextSessionView session={session} onFinished={() => void refetch()} />
+  );
 }

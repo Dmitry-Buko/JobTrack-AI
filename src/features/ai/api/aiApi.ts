@@ -23,6 +23,8 @@ import {
 
 interface RequestError {
   message: string;
+  /** HTTP-статус Edge Function: нужен очереди оценок для решения о повторе. */
+  status?: number;
 }
 
 /** Контекст вакансии, передаваемый в AI-функции. */
@@ -38,6 +40,13 @@ export interface QuestionGenerationArgs {
   language: InterviewLanguage;
   questionCount: number;
   application: ApplicationContext | null;
+  /** Подтемы теста (ключи allowlist). Отсутствует — сессия без выбора тем. */
+  subtopics?: string[] | null;
+}
+
+export interface GeneratedQuestion {
+  question: string;
+  subtopic: string | null;
 }
 
 export interface AnswerEvaluationArgs {
@@ -46,6 +55,8 @@ export interface AnswerEvaluationArgs {
   topic: InterviewTopic;
   difficulty: InterviewDifficulty;
   language: InterviewLanguage;
+  /** Подтема вопроса, если известна — уточняет промпт оценки. */
+  subtopic?: string | null;
 }
 
 export interface HintArgs {
@@ -53,6 +64,7 @@ export interface HintArgs {
   topic: InterviewTopic;
   difficulty: InterviewDifficulty;
   language: InterviewLanguage;
+  subtopic?: string | null;
 }
 
 export interface ReportArgs {
@@ -108,10 +120,11 @@ async function invokeFunction<T>(
         error: {
           message:
             payload?.error ?? `AI-сервис вернул ошибку (код ${error.context.status}).`,
+          status: error.context.status,
         },
       };
     }
-    return { error: { message: 'AI-сервис недоступен. Проверьте подключение и попробуйте позже.' } };
+    return { error: { message: 'AI-сервис недоступен. Проверьте подключение и попробуйте позже.', status: 0 } };
   }
 
   const parsed = parseAiResponse(schema, data);
@@ -126,7 +139,7 @@ export const aiApi = createApi({
   baseQuery: fakeBaseQuery<RequestError>(),
   tagTypes: [],
   endpoints: (builder) => ({
-    generateQuestions: builder.mutation<string[], QuestionGenerationArgs>({
+    generateQuestions: builder.mutation<GeneratedQuestion[], QuestionGenerationArgs>({
       queryFn: async (args) => {
         const result = await invokeFunction('interview-questions', { ...args }, questionsResponseSchema);
         return result.data

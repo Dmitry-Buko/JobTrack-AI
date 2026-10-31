@@ -7,17 +7,16 @@ export interface EmptyStateProps {
   action?: ReactNode;
 }
 
+/** Пустое состояние: одна фраза и одно действие, без рамок и «карточек в пустоте». */
 export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-surface px-6 py-14 text-center">
-      {icon && (
-        <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-surface-muted text-muted">
-          {icon}
-        </div>
+    <div className="flex flex-col items-center justify-center px-6 py-16 text-center animate-appear">
+      {icon && <div className="mb-4 text-titanium">{icon}</div>}
+      <h3 className="text-[17px] font-semibold tracking-[-0.01em] text-text">{title}</h3>
+      {description && (
+        <p className="mt-1.5 max-w-md text-[15px] leading-relaxed text-muted">{description}</p>
       )}
-      <h3 className="text-base font-semibold text-text">{title}</h3>
-      {description && <p className="mt-1 max-w-md text-sm text-muted">{description}</p>}
-      {action && <div className="mt-5">{action}</div>}
+      {action && <div className="mt-6">{action}</div>}
     </div>
   );
 }

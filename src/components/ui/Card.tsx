@@ -2,8 +2,14 @@ import type { HTMLAttributes, ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
 
+/** Карточка в духе iOS: белая поверхность на сгруппированном фоне, без рамки. */
 export function Card({ className, ...rest }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('rounded-xl border border-border bg-surface', className)} {...rest} />;
+  return (
+    <div
+      className={cn('squircle rounded-card bg-surface shadow-card', className)}
+      {...rest}
+    />
+  );
 }
 
 export function CardHeader({
@@ -20,8 +26,8 @@ export function CardHeader({
   return (
     <div className={cn('flex flex-wrap items-start justify-between gap-3 p-5 pb-3', className)}>
       <div className="min-w-0">
-        <h2 className="text-base font-semibold text-text">{title}</h2>
-        {description && <p className="mt-0.5 text-sm text-muted">{description}</p>}
+        <h2 className="text-[17px] font-semibold tracking-[-0.01em] text-text">{title}</h2>
+        {description && <p className="mt-0.5 text-[13px] text-muted">{description}</p>}
       </div>
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
     </div>

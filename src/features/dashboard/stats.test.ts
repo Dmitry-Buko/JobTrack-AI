@@ -71,6 +71,8 @@ function session(report: InterviewSession['report']): InterviewSession {
     user_id: 'user',
     application_id: null,
     mode: 'text',
+    format: null,
+    selected_topics: null,
     topic: 'javascript',
     difficulty: 'junior',
     language: 'ru',

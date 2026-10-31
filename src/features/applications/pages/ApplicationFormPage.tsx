@@ -58,14 +58,14 @@ export function ApplicationFormPage({ mode }: { mode: 'create' | 'edit' }) {
     <div className="space-y-4">
       <Link
         to={mode === 'edit' && id ? `/applications/${id}` : '/applications'}
-        className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-text"
+        className="inline-flex items-center gap-1.5 text-[15px] text-accent transition-colors hover:text-accent-hover"
       >
-        <ArrowLeft className="size-4" aria-hidden />
+        <ArrowLeft className="size-4" strokeWidth={1.75} aria-hidden />
         {mode === 'edit' ? 'К вакансии' : 'К списку вакансий'}
       </Link>
 
       <Card className="p-5 sm:p-6">
-        <h1 className="mb-6 text-xl font-semibold tracking-tight">
+        <h1 className="mb-6">
           {mode === 'create' ? 'Новая вакансия' : 'Редактирование вакансии'}
         </h1>
         <ApplicationForm

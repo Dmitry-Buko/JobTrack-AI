@@ -1,4 +1,4 @@
-import { ChevronDown } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { cn } from '@/lib/utils';
@@ -19,8 +19,8 @@ export interface StatusMenuProps {
 }
 
 /**
- * Доступное меню смены статуса вакансии. На первом этапе (по ТЗ) перемещение
- * между колонками Kanban выполняется именно через него.
+ * Доступное меню смены статуса вакансии в духе iOS: капсула-триггер
+ * без рамки и всплывающее меню с галочкой у выбранного пункта.
  */
 export function StatusMenu({
   value,
@@ -70,14 +70,16 @@ export function StatusMenu({
         aria-label={label ?? `Статус: ${meta.label}. Изменить`}
         onClick={() => setOpen((current) => !current)}
         className={cn(
-          'inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface font-medium text-text transition-colors',
-          'hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50',
-          size === 'sm' ? 'px-2 py-1 text-xs' : 'px-2.5 py-1.5 text-sm',
+          'inline-flex items-center gap-1.5 rounded-full bg-surface-muted font-medium text-text',
+          'transition duration-200 ease-[var(--ease-ios)] active:scale-[0.97]',
+          'hover:bg-black/[0.06] dark:hover:bg-white/[0.08]',
+          'disabled:pointer-events-none disabled:opacity-40',
+          size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-[13px]',
         )}
       >
         <span className={cn('size-1.5 rounded-full', meta.dotClass)} aria-hidden />
         <span className="max-w-40 truncate">{meta.label}</span>
-        <ChevronDown className="size-3.5 shrink-0 text-muted" aria-hidden />
+        <ChevronDown className="size-3.5 shrink-0 text-muted" strokeWidth={1.75} aria-hidden />
       </button>
 
       {open && (
@@ -85,7 +87,7 @@ export function StatusMenu({
           role="listbox"
           aria-label="Выбор статуса"
           className={cn(
-            'absolute top-full z-30 mt-1 w-52 overflow-hidden rounded-lg border border-border bg-surface py-1 shadow-lg',
+            'squircle absolute top-full z-30 mt-1.5 min-w-56 origin-top overflow-hidden rounded-menu bg-surface-raised p-1.5 shadow-pop animate-pop-in',
             align === 'right' ? 'right-0' : 'left-0',
           )}
         >
@@ -101,12 +103,14 @@ export function StatusMenu({
                     if (!selected) onChange(status);
                   }}
                   className={cn(
-                    'flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors',
-                    selected ? 'bg-accent-soft text-accent' : 'text-text hover:bg-surface-muted',
+                    'flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left text-[15px]',
+                    'transition-colors duration-150',
+                    selected ? 'text-accent' : 'text-text hover:bg-black/[0.04] dark:hover:bg-white/[0.06]',
                   )}
                 >
-                  <span className={cn('size-1.5 rounded-full', statusMeta.dotClass)} aria-hidden />
-                  {statusMeta.label}
+                  <span className={cn('size-2 shrink-0 rounded-full', statusMeta.dotClass)} aria-hidden />
+                  <span className="flex-1">{statusMeta.label}</span>
+                  {selected && <Check className="size-4 shrink-0" strokeWidth={2} aria-hidden />}
                 </button>
               </li>
             );

@@ -84,7 +84,7 @@ export function SkillsEditor({ skills }: { skills: ProfileSkill[] }) {
 
   return (
     <div className="space-y-5">
-      <p className="rounded-lg bg-surface-muted px-3 py-2 text-xs text-muted">
+      <p className="rounded-control bg-surface-muted px-3 py-2 text-[13px] text-muted">
         Уровень владения — это самооценка, а не подтверждённый результат проверки. Профиль навыков
         используется для AI-анализа вакансий и персонализации тренировок.
       </p>
@@ -94,7 +94,7 @@ export function SkillsEditor({ skills }: { skills: ProfileSkill[] }) {
           Навыки пока не добавлены. Начните с базового списка технологий для frontend-разработчика.
         </p>
       ) : (
-        <ul className="divide-y divide-border">
+        <ul className="divide-y divide-separator">
           {skills.map((skill) => (
             <li key={skill.id} className="flex flex-wrap items-center gap-3 py-3">
               <Input
@@ -118,7 +118,7 @@ export function SkillsEditor({ skills }: { skills: ProfileSkill[] }) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-danger hover:bg-danger-soft"
+                className="text-danger-strong hover:bg-danger-soft hover:text-danger-strong"
                 aria-label={`Удалить навык ${skill.name}`}
                 disabled={isDeleting}
                 onClick={() => handleDelete(skill)}
@@ -131,7 +131,7 @@ export function SkillsEditor({ skills }: { skills: ProfileSkill[] }) {
         </ul>
       )}
 
-      <div className="flex flex-col gap-3 rounded-lg border border-border p-4 sm:flex-row sm:items-end">
+      <div className="flex flex-col gap-3 rounded-control bg-surface-muted/60 p-4 sm:flex-row sm:items-end">
         <div className="flex-1">
           <Input
             label="Новый навык"

@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Info } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
 import {
   createContext,
   useCallback,
@@ -30,9 +30,9 @@ const ToastContext = createContext<ToastApi | null>(null);
 const TOAST_AUTO_HIDE_MS = 4000;
 
 const TOAST_ICON: Record<ToastType, ReactNode> = {
-  success: <CheckCircle2 className="size-5 text-success" aria-hidden />,
-  error: <AlertCircle className="size-5 text-danger" aria-hidden />,
-  info: <Info className="size-5 text-accent" aria-hidden />,
+  success: <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-success-strong" strokeWidth={1.75} aria-hidden />,
+  error: <AlertCircle className="mt-0.5 size-5 shrink-0 text-danger-strong" strokeWidth={1.75} aria-hidden />,
+  info: <Info className="mt-0.5 size-5 shrink-0 text-accent" strokeWidth={1.75} aria-hidden />,
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -65,7 +65,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={api}>
       {children}
       <div
-        className="pointer-events-none fixed bottom-4 right-4 z-[60] flex w-full max-w-sm flex-col gap-2"
+        className="pointer-events-none fixed inset-x-0 top-0 z-[60] flex flex-col items-center gap-2 px-4 pt-[max(1rem,env(safe-area-inset-top))]"
         role="status"
         aria-live="polite"
       >
@@ -73,18 +73,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={toast.id}
             className={cn(
-              'pointer-events-auto flex items-start gap-3 rounded-lg border border-border bg-surface p-4 shadow-md',
+              'squircle pointer-events-auto flex w-full max-w-sm items-start gap-2.5 rounded-[20px]',
+              'bg-surface-raised/85 px-4 py-3 shadow-pop backdrop-blur-xl animate-appear',
             )}
           >
             {TOAST_ICON[toast.type]}
-            <p className="flex-1 text-sm text-text">{toast.message}</p>
+            <p className="flex-1 text-[15px] leading-snug text-text">{toast.message}</p>
             <button
               type="button"
               onClick={() => remove(toast.id)}
-              className="text-xs font-medium text-muted hover:text-text"
+              className="-mt-0.5 -mr-1 flex size-7 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-text"
               aria-label="Скрыть уведомление"
             >
-              Скрыть
+              <X className="size-3.5" strokeWidth={2} aria-hidden />
             </button>
           </div>
         ))}

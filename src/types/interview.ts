@@ -6,6 +6,9 @@ export const INTERVIEW_MODE_LABELS: Record<InterviewMode, string> = {
   voice: 'Голосовой',
 };
 
+/** Формат текстовой сессии: chat — старый диалог, test — тест по одному вопросу. */
+export type InterviewFormat = 'chat' | 'test';
+
 export const INTERVIEW_TOPICS = [
   'javascript',
   'typescript',
@@ -105,10 +108,19 @@ export interface InterviewMessage {
   content: string;
   turn_index: number;
   evaluation: AnswerEvaluation | SkippedAnswerMark | null;
+  /** Подтема вопроса (ключ allowlist) — только для сообщений-вопросов теста. */
+  subtopic: string | null;
+  /** Использовалась ли подсказка при ответе на этот вопрос. */
+  hint_used: boolean | null;
   created_at: string;
 }
 
-export type InterviewMessageInsert = Omit<InterviewMessage, 'id' | 'created_at'>;
+/** Вставка сообщения: подтема и флаг подсказки — опциональны (БД даёт дефолты). */
+export type InterviewMessageInsert = Omit<
+  InterviewMessage,
+  'id' | 'created_at' | 'subtopic' | 'hint_used'
+> &
+  Partial<Pick<InterviewMessage, 'subtopic' | 'hint_used'>>;
 
 /** Итоговый отчёт тренировки. Хранится в interview_sessions.report (jsonb). */
 export interface SessionReport {
@@ -130,6 +142,10 @@ export interface InterviewSession {
   user_id: string;
   application_id: string | null;
   mode: InterviewMode;
+  /** Формат текстовой сессии. NULL у сессий, созданных до миграции 0005. */
+  format: InterviewFormat | null;
+  /** Выбранные подтемы теста (ключи allowlist). NULL у голосовых и старых сессий. */
+  selected_topics: string[] | null;
   topic: InterviewTopic;
   difficulty: InterviewDifficulty;
   language: InterviewLanguage;
@@ -142,10 +158,12 @@ export interface InterviewSession {
   created_at: string;
 }
 
+/** Вставка сессии: формат и выбранные темы — опциональны (старые клиенты их не шлют). */
 export type InterviewSessionInsert = Omit<
   InterviewSession,
-  'id' | 'user_id' | 'started_at' | 'completed_at' | 'summary' | 'report' | 'created_at'
->;
+  'id' | 'user_id' | 'started_at' | 'completed_at' | 'summary' | 'report' | 'created_at' | 'format' | 'selected_topics'
+> &
+  Partial<Pick<InterviewSession, 'format' | 'selected_topics'>>;
 
 /** Настройки новой тренировки, которые выбирает пользователь. */
 export interface InterviewSettings {

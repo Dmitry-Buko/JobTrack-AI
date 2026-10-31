@@ -3,36 +3,51 @@ export function cn(...classes: Array<string | false | null | undefined>): string
   return classes.filter(Boolean).join(' ');
 }
 
-const dateFmt = new Intl.DateTimeFormat('ru-RU', {
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-});
-
-const dateTimeFmt = new Intl.DateTimeFormat('ru-RU', {
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-});
+const MONTHS_SHORT = [
+  'янв',
+  'фев',
+  'мар',
+  'апр',
+  'мая',
+  'июн',
+  'июл',
+  'авг',
+  'сен',
+  'окт',
+  'ноя',
+  'дек',
+] as const;
 
 const numberFmt = new Intl.NumberFormat('ru-RU');
 
-/** «05.03.2026». Принимает дату в формате YYYY-MM-DD или ISO-дату. */
-export function formatDate(iso: string | null | undefined): string {
-  if (!iso) return '—';
+function parseDate(iso: string): Date | null {
   const date = new Date(iso.length === 10 ? `${iso}T00:00:00` : iso);
-  if (Number.isNaN(date.getTime())) return '—';
-  return dateFmt.format(date);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
-/** «05.03.2026, 14:30». */
+/** «5 мар» в текущем году, «5 мар 2025» — в прошлом. */
+export function formatDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const date = parseDate(iso);
+  if (!date) return '—';
+  const day = date.getDate();
+  const month = MONTHS_SHORT[date.getMonth()];
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  return sameYear ? `${day} ${month}` : `${day} ${month} ${date.getFullYear()}`;
+}
+
+/** «Сегодня, 14:30», «Вчера, 09:05» или «5 мар, 14:30». */
 export function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return '—';
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return '—';
-  return dateTimeFmt.format(date);
+  const date = parseDate(iso);
+  if (!date) return '—';
+  const time = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  const diffDays = Math.round(
+    (startOfDay(date) - startOfDay(new Date())) / MS_PER_DAY,
+  );
+  if (diffDays === 0) return `Сегодня, ${time}`;
+  if (diffDays === -1) return `Вчера, ${time}`;
+  return `${formatDate(iso)}, ${time}`;
 }
 
 const MS_PER_DAY = 86_400_000;
@@ -42,17 +57,26 @@ function startOfDay(date: Date): number {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 }
 
-/** «сегодня», «завтра», «через 3 дня», «5 дн. назад». */
+/** «Сегодня», «Завтра», «через 3 дня», «5 дней назад». */
 export function formatRelativeDate(iso: string): string {
-  const date = new Date(iso.length === 10 ? `${iso}T00:00:00` : iso);
-  if (Number.isNaN(date.getTime())) return '—';
+  const date = parseDate(iso);
+  if (!date) return '—';
 
   const diffDays = Math.round((startOfDay(date) - startOfDay(new Date())) / MS_PER_DAY);
-  if (diffDays === 0) return 'сегодня';
-  if (diffDays === 1) return 'завтра';
-  if (diffDays === -1) return 'вчера';
+  if (diffDays === 0) return 'Сегодня';
+  if (diffDays === 1) return 'Завтра';
+  if (diffDays === -1) return 'Вчера';
   if (diffDays > 1) return `через ${diffDays} ${pluralize(diffDays, ['день', 'дня', 'дней'])}`;
   return `${-diffDays} ${pluralize(-diffDays, ['день', 'дня', 'дней'])} назад`;
+}
+
+/** Дата-«дедлайн» для карточек: «Сегодня», «Завтра», «через 3 дня» или «5 мар». */
+export function formatDueDate(iso: string): string {
+  const date = parseDate(iso);
+  if (!date) return '—';
+  const diffDays = Math.round((startOfDay(date) - startOfDay(new Date())) / MS_PER_DAY);
+  if (diffDays >= -1) return formatRelativeDate(iso);
+  return formatDate(iso);
 }
 
 /** Диапазон зарплаты: «100 000 – 150 000» (с обычными пробелами). */
@@ -71,8 +95,8 @@ export function formatSalaryRange(
 /** Дата в формате value для <input type="date"> (YYYY-MM-DD). */
 export function toDateInputValue(iso: string | null | undefined): string {
   if (!iso) return '';
-  const date = new Date(iso.length === 10 ? `${iso}T00:00:00` : iso);
-  if (Number.isNaN(date.getTime())) return '';
+  const date = parseDate(iso);
+  if (!date) return '';
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');

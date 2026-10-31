@@ -15,8 +15,7 @@ import {
 import { CalendarClock, GripVertical } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import { Card } from '@/components/ui/Card';
-import { cn, formatRelativeDate, formatSalaryRange } from '@/lib/utils';
+import { cn, formatDueDate, formatSalaryRange } from '@/lib/utils';
 import {
   APPLICATION_STATUSES,
   APPLICATION_STATUS_META,
@@ -53,37 +52,47 @@ function KanbanCard({ application, onStatusChange, statusDisabled }: KanbanCardP
           ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`, zIndex: 20 }
           : undefined
       }
-      className={cn(isDragging && 'relative opacity-80')}
+      className={cn(
+        'transition duration-200 ease-[var(--ease-ios)]',
+        isDragging && 'relative scale-[1.03]',
+      )}
     >
-      <Card className="relative p-3 pl-9 transition-colors hover:border-accent/50">
+      <div
+        className={cn(
+          'squircle relative rounded-[16px] bg-surface p-3 pl-9',
+          isDragging ? 'shadow-raised' : 'shadow-card',
+        )}
+      >
         {/* Ручка перетаскивания — не мешает ссылке и меню статуса */}
         <button
           type="button"
-          className="absolute left-2 top-2.5 cursor-grab rounded text-muted/60 hover:text-text active:cursor-grabbing"
+          className="absolute left-2 top-2.5 cursor-grab rounded text-muted/70 transition-colors hover:text-text active:cursor-grabbing"
           aria-label={`Перетащить вакансию «${application.position}» в другую колонку`}
           {...attributes}
           {...listeners}
         >
-          <GripVertical className="size-4" aria-hidden />
+          <GripVertical className="size-4" strokeWidth={1.75} aria-hidden />
         </button>
 
         <Link
           to={`/applications/${application.id}`}
-          className="absolute inset-0 rounded-xl"
+          className="absolute inset-0 rounded-[16px]"
           aria-label={`Открыть вакансию: ${application.company} — ${application.position}`}
         />
         <div className="pointer-events-none flex flex-col gap-1.5 pr-8">
-          <h3 className="line-clamp-2 text-sm font-semibold text-text">{application.position}</h3>
-          <p className="truncate text-xs text-muted">{application.company}</p>
-          <p className="text-xs text-muted">
+          <h3 className="line-clamp-2 text-[15px] leading-snug font-semibold text-text">
+            {application.position}
+          </h3>
+          <p className="truncate text-[13px] text-muted">{application.company}</p>
+          <p className="tabular text-[13px] text-muted">
             {formatSalaryRange(application.salary_min, application.salary_max)}
           </p>
           <div className="flex flex-wrap items-center gap-1.5">
             <PriorityBadge priority={application.priority} />
             {application.next_action_at && (
-              <span className="inline-flex items-center gap-1 text-[11px] text-warning">
-                <CalendarClock className="size-3" aria-hidden />
-                {formatRelativeDate(application.next_action_at)}
+              <span className="inline-flex items-center gap-1 text-[12px] font-medium text-warning-strong">
+                <CalendarClock className="size-3" strokeWidth={1.75} aria-hidden />
+                {formatDueDate(application.next_action_at)}
               </span>
             )}
           </div>
@@ -98,7 +107,7 @@ function KanbanCard({ application, onStatusChange, statusDisabled }: KanbanCardP
             label={`Статус вакансии ${application.company}: изменить`}
           />
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
@@ -121,16 +130,16 @@ function KanbanColumn({
     <section
       aria-label={`${meta.label} (${applications.length})`}
       className={cn(
-        'flex w-72 shrink-0 flex-col gap-3 rounded-xl border p-3 transition-colors',
-        isOver ? 'border-accent/60 bg-accent-soft/50' : 'border-border bg-surface-muted/60',
+        'flex w-72 shrink-0 flex-col gap-2.5 rounded-card p-2.5 transition duration-200 ease-[var(--ease-ios)]',
+        isOver ? 'bg-accent-soft ring-1 ring-accent/40' : 'bg-black/[0.035] dark:bg-white/[0.045]',
       )}
     >
-      <header className="flex items-center justify-between gap-2 px-1">
-        <span className="inline-flex items-center gap-2 text-sm font-medium text-text">
+      <header className="flex items-center justify-between gap-2 px-1.5 pt-1">
+        <span className="inline-flex items-center gap-2 text-[13px] font-semibold text-text">
           <span className={cn('size-2 rounded-full', meta.dotClass)} aria-hidden />
           {meta.label}
         </span>
-        <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-muted">
+        <span className="tabular rounded-full bg-surface px-2 py-0.5 text-[12px] font-semibold text-muted">
           {applications.length}
         </span>
       </header>
@@ -144,8 +153,8 @@ function KanbanColumn({
           />
         ))}
         {applications.length === 0 && (
-          <p className="rounded-lg border border-dashed border-border px-3 py-6 text-center text-xs text-muted">
-            Перетащите вакансию или пока пусто
+          <p className="rounded-[16px] px-3 py-6 text-center text-[13px] text-muted">
+            Пусто — перетащите карточку сюда
           </p>
         )}
       </div>
@@ -181,7 +190,7 @@ export function KanbanBoard({ applications, onStatusChange, statusDisabled }: Ka
       onDragEnd={handleDragEnd}
     >
       <div className="overflow-x-auto pb-2" role="region" aria-label="Kanban-доска вакансий по статусам">
-        <div className="flex w-max gap-4 px-0.5 pb-2">
+        <div className="flex w-max gap-3 px-0.5 pb-2">
           {APPLICATION_STATUSES.map((status) => (
             <KanbanColumn
               key={status}

@@ -8,6 +8,7 @@ import {
   languageName,
   topicLabel,
 } from '../shared/interview.ts';
+import { JS_SUBTOPIC_KEYS, subtopicLabel } from '../shared/subtopics.ts';
 import { chatJson, GeminiError } from '../shared/gemini.ts';
 import { checkRateLimit } from '../shared/ratelimit.ts';
 import { clampText, parseBody } from '../shared/validate.ts';
@@ -29,6 +30,8 @@ const bodySchema = z.object({
   difficulty: z.enum(['junior', 'junior_plus', 'middle']),
   language: z.enum(['ru', 'en']),
   hint: z.boolean().optional(),
+  // Подтема вопроса теста — только для уточнения промпта, необязательное.
+  subtopic: z.string().max(100).optional(),
 });
 
 const hintSchema = z.object({ hint: z.string().min(1) });
@@ -113,13 +116,18 @@ Deno.serve(async (req) => {
   const { question, answer, topic, difficulty, language, hint } = body.data;
   const questionText = clampText(question, 2000);
   const answerText = typeof answer === 'string' ? clampText(answer) : '';
+  // Точная тема вопроса теста (если передана) уточняет контекст оценки.
+  const themeText =
+    body.data.subtopic && JS_SUBTOPIC_KEYS.includes(body.data.subtopic)
+      ? subtopicLabel(body.data.subtopic)
+      : topicLabel(topic);
 
   try {
     if (hint) {
       // Режим подсказки: направляем, но не раскрываем полный ответ.
       const raw = await chatJson(
         INTERVIEWER_SYSTEM,
-        `Вопрос собеседования (${topicLabel(topic)}):\n${questionText}\n\n` +
+        `Вопрос собеседования (${themeText}):\n${questionText}\n\n` +
           `Дай короткую подсказку, которая направит кандидата к ответу, но не раскрывает сам ответ. ` +
           `Подсказку пиши на ${languageName(language)} языке.\n` +
           'Верни JSON вида {"hint": "..."}',
@@ -138,8 +146,8 @@ Deno.serve(async (req) => {
 
     const raw = await chatJson(
       INTERVIEWER_SYSTEM,
-      `Оцени ответ кандидата на вопрос технического собеседования.\n\n` +
-        `Тема: ${topicLabel(topic)}. Ожидаемая глубина: ${difficultyExpectations(difficulty)}.\n` +
+        `Оцени ответ кандидата на вопрос технического собеседования.\n\n` +
+        `Тема: ${themeText}. Ожидаемая глубина: ${difficultyExpectations(difficulty)}.\n` +
         `Вопрос:\n${questionText}\n\nОтвет кандидата:\n${answerText}\n\n` +
         `Пояснения пиши на ${languageName(language)} языке. Оцени по пяти критериям ` +
         '(correctness — корректность, completeness — полность, understanding — понимание сути вопроса, ' +

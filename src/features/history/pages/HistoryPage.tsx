@@ -1,4 +1,4 @@
-import { History as HistoryIcon } from 'lucide-react';
+import { ChevronRight, History as HistoryIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -8,19 +8,21 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { Select } from '@/components/ui/Select';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Badge } from '@/components/ui/Badge';
-import { Card } from '@/components/ui/Card';
+import { ListGroup } from '@/components/ui/ListGroup';
+import { Button } from '@/components/ui/Button';
 import { formatDateTime, pluralize } from '@/lib/utils';
 import {
   DIFFICULTY_LABELS,
   INTERVIEW_MODE_LABELS,
   INTERVIEW_MODES,
   INTERVIEW_TOPICS,
-  LANGUAGE_LABELS,
   SESSION_STATUS_LABELS,
   TOPIC_LABELS,
   type InterviewMode,
+  type InterviewSession,
   type InterviewTopic,
 } from '@/types/interview';
+import { subtopicLabel } from '@/features/interview-coach/lib/subtopics';
 
 import { useGetSessionsQuery } from '@/features/interview-coach/api/sessionsApi';
 
@@ -34,35 +36,46 @@ function SessionRow({
   session,
   companyName,
 }: {
-  session: import('@/types/interview').InterviewSession;
+  session: InterviewSession;
   companyName: string | null;
 }) {
+  // Формат: тест / старый текстовый / голосовой; для теста — выбранные темы.
+  const formatLabel =
+    session.format === 'test' ? 'Тест' : INTERVIEW_MODE_LABELS[session.mode];
+  const topicsLine =
+    session.format === 'test' && session.selected_topics && session.selected_topics.length > 0
+      ? session.selected_topics.map((key) => subtopicLabel(key)).join(', ')
+      : null;
+
   return (
     <Link
       to={`/interview-coach/session/${session.id}`}
-      className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-4 transition-colors hover:border-accent/50 sm:flex-row sm:items-center sm:justify-between"
+      className="flex min-h-[56px] items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.03]"
     >
-      <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-text">
-          {TOPIC_LABELS[session.topic]} · {DIFFICULTY_LABELS[session.difficulty]} ·{' '}
-          {LANGUAGE_LABELS[session.language]}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[15px] font-semibold text-text">
+          {TOPIC_LABELS[session.topic]} · {DIFFICULTY_LABELS[session.difficulty]}
         </p>
-        <p className="mt-0.5 truncate text-xs text-muted">
-          {formatDateTime(session.created_at)} · {INTERVIEW_MODE_LABELS[session.mode]} ·{' '}
-          {session.question_count}{' '}
-          {pluralize(session.question_count, ['вопрос', 'вопроса', 'вопросов'])}
+        <p className="mt-0.5 truncate text-[13px] text-muted">
+          {formatDateTime(session.created_at)} · {formatLabel}
           {companyName ? ` · ${companyName}` : ''}
         </p>
+        {topicsLine && (
+          <p className="mt-0.5 line-clamp-2 text-[12px] text-subtle" title={topicsLine}>
+            {topicsLine}
+          </p>
+        )}
       </div>
       <div className="flex shrink-0 items-center gap-2">
-        <Badge className="border-border bg-surface-muted text-muted">
-          {SESSION_STATUS_LABELS[session.status]}
-        </Badge>
         {session.report && (
-          <Badge className="border-accent/30 bg-accent-soft text-accent">
-            {session.report.overall_score != null ? `${session.report.overall_score} / 5` : 'Без оценки'}
+          <Badge className="tabular bg-accent-soft text-accent">
+            {session.report.overall_score != null ? `${session.report.overall_score} из 5` : 'Без оценки'}
           </Badge>
         )}
+        <Badge className="hidden bg-neutral-soft text-neutral-strong sm:inline-flex">
+          {SESSION_STATUS_LABELS[session.status]}
+        </Badge>
+        <ChevronRight className="size-4 text-muted" strokeWidth={1.75} aria-hidden />
       </div>
     </Link>
   );
@@ -96,18 +109,17 @@ export function HistoryPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">История тренировок</h1>
-        <p className="mt-1 text-sm text-muted">
+        <h1>История</h1>
+        <p className="mt-1 text-[15px] text-muted">
           {sessions.length}{' '}
-          {pluralize(sessions.length, ['тренировка', 'тренировки', 'тренировок'])} — результаты
-          сохраняются и доступны после перезагрузки
+          {pluralize(sessions.length, ['тренировка', 'тренировки', 'тренировок'])}
         </p>
       </div>
 
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 4 }, (_, index) => (
-            <Skeleton key={index} className="h-20" />
+            <Skeleton key={index} className="h-16" />
           ))}
         </div>
       ) : isError ? (
@@ -122,18 +134,18 @@ export function HistoryPage() {
         />
       ) : sessions.length === 0 ? (
         <EmptyState
-          icon={<HistoryIcon className="size-6" aria-hidden />}
+          icon={<HistoryIcon className="size-8" strokeWidth={1.5} aria-hidden />}
           title="Тренировок пока не было"
-          description="Запустите первую тренировку в AI-тренажёре — здесь появится история с отчётами и рекомендациями."
+          description="Запустите первую тренировку — здесь появятся отчёты и рекомендации."
           action={
-            <Link to="/interview-coach" className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-contrast hover:bg-accent-hover">
-              Начать тренировку
+            <Link to="/interview-coach">
+              <Button>Начать тренировку</Button>
             </Link>
           }
         />
       ) : (
         <>
-          <Card className="grid gap-3 p-4 sm:grid-cols-3">
+          <div className="squircle grid gap-3 rounded-card bg-surface p-4 shadow-card sm:grid-cols-3">
             <Select
               label="Тема"
               value={filters.topic}
@@ -175,12 +187,12 @@ export function HistoryPage() {
                 Последние 30 дней
               </option>
             </Select>
-          </Card>
+          </div>
 
           {visibleSessions.length === 0 ? (
-            <EmptyState title="Ничего не найдено" description="Измените фильтры — под них не попало ни одной тренировки." />
+            <EmptyState title="Ничего не найдено" description="Попробуйте изменить фильтры." />
           ) : (
-            <div className="space-y-3">
+            <ListGroup className="animate-appear">
               {visibleSessions.map((session) => (
                 <SessionRow
                   key={session.id}
@@ -188,7 +200,7 @@ export function HistoryPage() {
                   companyName={session.application_id ? companyNameById.get(session.application_id) ?? null : null}
                 />
               ))}
-            </div>
+            </ListGroup>
           )}
         </>
       )}

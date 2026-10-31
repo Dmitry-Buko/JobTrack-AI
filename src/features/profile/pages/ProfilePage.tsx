@@ -30,7 +30,7 @@ export function ProfilePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Мой профиль</h1>
+      <h1>Профиль</h1>
 
       {isLoading ? (
         <Skeleton className="h-80" />
@@ -38,7 +38,7 @@ export function ProfilePage() {
         <Card>
           <CardHeader
             title="Основная информация"
-            description="Используется для персонализации тренировок и анализа вакансий"
+            description="Помогает ИИ подстраивать тренировки и анализ вакансий"
           />
           <CardContent>
             <ProfileForm
@@ -62,7 +62,7 @@ export function ProfilePage() {
       )}
 
       <Card>
-        <CardHeader title="Навыки" description="Технологии и уровень владения (самооценка)" />
+        <CardHeader title="Навыки" description="Технологии и уровень владения" />
         <CardContent>
           {isSkillsLoading ? <Skeleton className="h-40" /> : <SkillsEditor skills={skills} />}
         </CardContent>

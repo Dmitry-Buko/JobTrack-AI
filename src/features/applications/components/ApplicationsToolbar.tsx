@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Select } from '@/components/ui/Select';
-import { cn } from '@/lib/utils';
 import {
   APPLICATION_STATUSES,
   APPLICATION_STATUS_META,
@@ -39,6 +39,7 @@ export function ApplicationsToolbar({
     <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
       <div className="grid flex-1 gap-3 sm:grid-cols-3">
         <Input
+          type="search"
           label="Поиск"
           placeholder="Компания или должность"
           value={filters.search}
@@ -82,7 +83,7 @@ export function ApplicationsToolbar({
           label="Сортировка"
           value={sort}
           onChange={(event) => onSortChange(event.target.value as ApplicationSort)}
-          className="sm:min-w-56"
+          className="sm:min-w-52"
         >
           {Object.entries(SORT_LABELS).map(([value, label]) => (
             <option key={value} value={value}>
@@ -91,39 +92,21 @@ export function ApplicationsToolbar({
           ))}
         </Select>
 
-        <div
-          className="flex h-10 items-center rounded-lg border border-border bg-surface p-1"
-          role="group"
-          aria-label="Представление"
-        >
-          <button
-            type="button"
-            aria-pressed={view === 'list'}
-            aria-label="Список"
-            onClick={() => onViewChange('list')}
-            className={cn(
-              'flex h-8 w-9 items-center justify-center rounded-md transition-colors',
-              view === 'list' ? 'bg-accent-soft text-accent' : 'text-muted hover:text-text',
-            )}
-          >
-            <List className="size-4" aria-hidden />
-          </button>
-          <button
-            type="button"
-            aria-pressed={view === 'board'}
-            aria-label="Доска"
-            onClick={() => onViewChange('board')}
-            className={cn(
-              'flex h-8 w-9 items-center justify-center rounded-md transition-colors',
-              view === 'board' ? 'bg-accent-soft text-accent' : 'text-muted hover:text-text',
-            )}
-          >
-            <LayoutGrid className="size-4" aria-hidden />
-          </button>
+        <div className="flex items-center pb-[1px]">
+          <SegmentedControl
+            aria-label="Представление"
+            className="w-[112px]"
+            value={view}
+            onChange={onViewChange}
+            options={[
+              { value: 'list', label: 'Список', icon: List, srLabel: 'Список' },
+              { value: 'board', label: 'Доска', icon: LayoutGrid, srLabel: 'Доска' },
+            ]}
+          />
         </div>
 
         <Link to="/applications/new">
-          <Button icon={<Plus className="size-4" aria-hidden />}>
+          <Button icon={<Plus className="size-4" strokeWidth={1.75} aria-hidden />}>
             <span className="hidden sm:inline">Добавить вакансию</span>
             <span className="sm:hidden">Добавить</span>
           </Button>

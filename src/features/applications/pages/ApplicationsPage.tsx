@@ -56,10 +56,10 @@ export function ApplicationsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Вакансии</h1>
-          <p className="mt-1 text-sm text-muted">
+          <h1>Вакансии</h1>
+          <p className="mt-1 text-[15px] text-muted">
             {applications.length}{' '}
-            {pluralize(applications.length, ['сохранённая вакансия', 'сохранённые вакансии', 'сохранённых вакансий'])}
+            {pluralize(applications.length, ['вакансия', 'вакансии', 'вакансий'])}
           </p>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { aiApi } from '@/features/ai/api/aiApi';
 import { authReducer } from '@/features/auth/authSlice';
 import { applicationsApi } from '@/features/applications/api/applicationsApi';
 import { sessionsApi } from '@/features/interview-coach/api/sessionsApi';
+import { testSessionReducer } from '@/features/interview-coach/testSession/testSessionSlice';
 import { profileApi } from '@/features/profile/api/profileApi';
 
 export const store = configureStore({
@@ -14,6 +15,7 @@ export const store = configureStore({
     [profileApi.reducerPath]: profileApi.reducer,
     [sessionsApi.reducerPath]: sessionsApi.reducer,
     [aiApi.reducerPath]: aiApi.reducer,
+    testSession: testSessionReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(

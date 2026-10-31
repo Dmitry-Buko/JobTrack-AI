@@ -15,7 +15,7 @@ import {
 import { useGetApplicationsQuery } from '@/features/applications/api/applicationsApi';
 import { assembleReport } from '@/features/ai/lib/report';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { ListGroup } from '@/components/ui/ListGroup';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Modal } from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -28,15 +28,17 @@ import {
 } from '@/types/interview';
 
 import { EvaluationCard } from './EvaluationCard';
+import { SKIP_ANSWER_TEXT } from '../lib/constants';
 
-const SKIP_ANSWER_TEXT = '(Вопрос пропущен)';
-
+/** Диалог как в iMessage: вопрос интервьюера — серый пузырь слева, ответ — синий справа. */
 function TranscriptItem({ message, questionNumber }: { message: InterviewMessage; questionNumber: number }) {
   if (message.role === 'assistant') {
     return (
-      <div className="rounded-xl border border-accent/30 bg-accent-soft/60 p-4">
-        <p className="mb-1 text-xs font-medium text-accent">Вопрос {questionNumber}</p>
-        <p className="whitespace-pre-wrap text-sm leading-relaxed text-text">{message.content}</p>
+      <div className="max-w-[85%] animate-appear sm:max-w-[75%]">
+        <div className="squircle rounded-[20px] rounded-tl-[8px] bg-surface-muted px-4 py-3 shadow-card">
+          <p className="mb-0.5 text-[12px] font-medium text-muted">Вопрос {questionNumber}</p>
+          <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-text">{message.content}</p>
+        </div>
       </div>
     );
   }
@@ -45,10 +47,9 @@ function TranscriptItem({ message, questionNumber }: { message: InterviewMessage
   const isSkipped = message.content === SKIP_ANSWER_TEXT;
 
   return (
-    <div className="space-y-3">
-      <div className="rounded-xl border border-border bg-surface p-4">
-        <p className="mb-1 text-xs font-medium text-muted">Ваш ответ</p>
-        <p className="whitespace-pre-wrap text-sm leading-relaxed text-text">
+    <div className="ml-auto max-w-[85%] space-y-3 sm:max-w-[75%]">
+      <div className="squircle ml-auto w-fit rounded-[20px] rounded-tr-[8px] bg-accent px-4 py-3 animate-appear">
+        <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-accent-contrast">
           {isSkipped ? '— Пропущено —' : message.content}
         </p>
       </div>
@@ -63,33 +64,35 @@ function InterimResults({ messages }: { messages: InterviewMessage[] }) {
     (message) => message.evaluation && !('skipped' in message.evaluation),
   );
   return (
-    <div className="space-y-3">
-      {answered.length === 0 && <p className="text-sm text-muted">Пока нет ответов на вопросы.</p>}
-      {answered.map((message, index) => {
-        const evaluation =
-          message.evaluation && !('skipped' in message.evaluation) ? message.evaluation : null;
-        const numeric = evaluation
-          ? Object.values(evaluation.scores)
+    <div className="space-y-4">
+      {answered.length === 0 && <p className="text-[15px] text-muted">Пока нет ответов на вопросы.</p>}
+      <ListGroup>
+        {answered.map((message, index) => {
+          const evaluation =
+            message.evaluation && !('skipped' in message.evaluation) ? message.evaluation : null;
+          const numeric = evaluation
+            ? Object.values(evaluation.scores)
               .map((score) => ('score' in score ? score.score : null))
               .filter((score): score is 1 | 2 | 3 | 4 | 5 => score !== null)
-          : [];
-        const average = numeric.length
-          ? (numeric.reduce((sum, score) => sum + score, 0) / numeric.length).toFixed(1)
-          : '—';
-        return (
-          <div
-            key={message.id}
-            className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2"
-          >
-            <span className="min-w-0 flex-1 truncate text-sm text-text">
-              Ответ {index + 1}
-              {message.content === SKIP_ANSWER_TEXT ? ' (пропущен)' : ''}
-            </span>
-            <span className="text-sm font-medium text-muted">Средняя: {average}</span>
-          </div>
-        );
-      })}
-      <p className="text-xs text-muted">
+            : [];
+          const average = numeric.length
+            ? (numeric.reduce((sum, score) => sum + score, 0) / numeric.length).toFixed(1)
+            : '—';
+          return (
+            <div
+              key={message.id}
+              className="flex min-h-[44px] items-center justify-between gap-3 px-4 py-2.5"
+            >
+              <span className="min-w-0 flex-1 truncate text-[15px] text-text">
+                Ответ {index + 1}
+                {message.content === SKIP_ANSWER_TEXT ? ' · пропущен' : ''}
+              </span>
+              <span className="tabular text-[15px] font-medium text-muted">{average}</span>
+            </div>
+          );
+        })}
+      </ListGroup>
+      <p className="text-[13px] text-muted">
         Оценённых ответов: {scored.length} из {answered.length}.
       </p>
     </div>
@@ -144,21 +147,23 @@ export function TextSessionView({
           questionCount: session.question_count,
           application: application
             ? {
-                company: application.company,
-                position: application.position,
-                description: application.description,
-              }
+              company: application.company,
+              position: application.position,
+              description: application.description,
+            }
             : null,
         }).unwrap();
 
         await addMessages({
           sessionId: session.id,
-          messages: result.map((content, index) => ({
+          messages: result.map((item, index) => ({
             session_id: session.id,
             role: 'assistant' as const,
-            content,
+            content: item.question,
             turn_index: index,
             evaluation: null,
+            subtopic: item.subtopic,
+            hint_used: false,
           })),
         }).unwrap();
       } catch {
@@ -283,32 +288,32 @@ export function TextSessionView({
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">
+          <p className="text-[22px] leading-tight font-semibold tracking-[-0.01em] text-text">
             {TOPIC_LABELS[session.topic]} · {DIFFICULTY_LABELS[session.difficulty]}
-          </h1>
+          </p>
           {application && (
-            <p className="mt-0.5 text-sm text-muted">
+            <p className="mt-0.5 text-[15px] text-muted">
               Подготовка к: {application.company} — {application.position}
             </p>
           )}
         </div>
-        <span className="text-sm text-muted">
-          {answers.length} / {questions.length || session.question_count} вопросов отвечено
+        <span className="tabular text-[13px] font-medium text-muted">
+          {answers.length} / {questions.length || session.question_count} отвечено
         </span>
       </div>
 
       <div
-        className="h-1.5 overflow-hidden rounded-full bg-surface-muted"
+        className="h-1 overflow-hidden rounded-full bg-black/[0.06] dark:bg-white/[0.1]"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={questions.length}
         aria-valuenow={answers.length}
       >
         <div
-          className="h-full rounded-full bg-accent transition-all"
+          className="h-full rounded-full bg-accent transition-all duration-300 ease-[var(--ease-ios)]"
           style={{
             width: questions.length ? `${(answers.length / questions.length) * 100}%` : '0%',
           }}
@@ -316,31 +321,31 @@ export function TextSessionView({
       </div>
 
       {questions.length === 0 ? (
-        <Card className="flex flex-col items-center gap-4 p-8 text-center">
+        <div className="flex flex-col items-center gap-4 py-14 text-center">
           {isGenerating ? (
             <>
               <Skeleton className="h-6 w-48" />
-              <p className="text-sm text-muted">ИИ готовит вопросы с учётом темы и уровня…</p>
+              <p className="text-[15px] text-muted">ИИ готовит вопросы с учётом темы и уровня…</p>
             </>
           ) : (
             <>
-              <p className="text-sm text-muted">Вопросы не сгенерированы.</p>
+              <p className="text-[15px] text-muted">Вопросы не сгенерированы.</p>
               <Button
                 variant="secondary"
                 onClick={() => {
                   generationStarted.current = false;
                   void refetch();
                 }}
-                icon={<RotateCcw className="size-4" aria-hidden />}
+                icon={<RotateCcw className="size-4" strokeWidth={1.75} aria-hidden />}
               >
                 Сгенерировать заново
               </Button>
             </>
           )}
-        </Card>
+        </div>
       ) : (
         <>
-          <div className="space-y-5">
+          <div className="flex flex-col gap-4">
             {messages.map((message) => (
               <TranscriptItem
                 key={message.id}
@@ -353,19 +358,19 @@ export function TextSessionView({
           </div>
 
           {currentQuestion && (
-            <Card className="space-y-4 p-5">
-              <div className="rounded-xl border border-accent/30 bg-accent-soft/60 p-4">
-                <p className="mb-1 text-xs font-medium text-accent">
+            <section className="squircle space-y-4 rounded-card bg-surface p-5 shadow-card animate-appear">
+              <div>
+                <p className="text-[13px] font-semibold tracking-[0.01em] text-accent uppercase">
                   Вопрос {currentQuestionIndex + 1} из {questions.length}
                 </p>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-text">
+                <p className="mt-2 text-[20px] leading-snug font-semibold tracking-[-0.01em] text-text">
                   {currentQuestion}
                 </p>
               </div>
 
               {hint && (
-                <p className="flex items-start gap-2 rounded-lg bg-warning-soft px-3 py-2.5 text-xs leading-relaxed text-warning">
-                  <Lightbulb className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                <p className="flex items-start gap-2 rounded-control bg-warning-soft px-3 py-2.5 text-[13px] leading-relaxed text-warning-strong animate-appear">
+                  <Lightbulb className="mt-0.5 size-4 shrink-0" strokeWidth={1.75} aria-hidden />
                   Подсказка: {hint}
                 </p>
               )}
@@ -377,15 +382,15 @@ export function TextSessionView({
                 placeholder="Расскажите своими словами — ИИ разберёт ответ и объяснит неточности"
                 rows={6}
                 disabled={isEvaluating}
-                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-accent/40"
+                className="squircle w-full rounded-control bg-surface-muted px-3 py-2.5 text-[15px] text-text transition duration-200 ease-[var(--ease-ios)] placeholder:text-muted focus:bg-surface focus:ring-2 focus:ring-accent/60 focus:outline-none disabled:opacity-50"
               />
-              {answerError && <p className="text-sm text-danger">{answerError}</p>}
+              {answerError && <p className="text-[13px] text-danger-strong">{answerError}</p>}
 
               <div className="flex flex-wrap items-center gap-2">
                 <Button
                   onClick={() => void submitAnswer()}
                   loading={isEvaluating}
-                  icon={<SendHorizontal className="size-4" aria-hidden />}
+                  icon={<SendHorizontal className="size-4" strokeWidth={1.75} aria-hidden />}
                 >
                   Ответить
                 </Button>
@@ -393,7 +398,7 @@ export function TextSessionView({
                   variant="secondary"
                   onClick={() => void askHint()}
                   loading={isHintLoading}
-                  icon={<Lightbulb className="size-4" aria-hidden />}
+                  icon={<Lightbulb className="size-4" strokeWidth={1.75} aria-hidden />}
                 >
                   Подсказка
                 </Button>
@@ -401,12 +406,12 @@ export function TextSessionView({
                   variant="ghost"
                   onClick={() => void skipQuestion()}
                   disabled={isEvaluating}
-                  icon={<SkipForward className="size-4" aria-hidden />}
+                  icon={<SkipForward className="size-4" strokeWidth={1.75} aria-hidden />}
                 >
                   Пропустить
                 </Button>
               </div>
-            </Card>
+            </section>
           )}
 
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -414,19 +419,19 @@ export function TextSessionView({
               variant="secondary"
               size="sm"
               onClick={() => setInterimOpen(true)}
-              icon={<BarChart3 className="size-4" aria-hidden />}
+              icon={<BarChart3 className="size-4" strokeWidth={1.75} aria-hidden />}
             >
               Промежуточный результат
             </Button>
             {isComplete ? (
-              <Button onClick={() => void finish()} loading={isFinishing}>
+              <Button size="lg" onClick={() => void finish()} loading={isFinishing}>
                 Сформировать итоговый отчёт
               </Button>
             ) : (
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-danger hover:bg-danger-soft"
+                className="text-danger-strong hover:bg-danger-soft hover:text-danger-strong"
                 onClick={() => setEarlyFinishOpen(true)}
               >
                 Завершить досрочно

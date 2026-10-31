@@ -1,10 +1,8 @@
 import { CalendarClock, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import { Card } from '@/components/ui/Card';
 import {
-  formatDate,
-  formatRelativeDate,
+  formatDueDate,
   formatSalaryRange,
 } from '@/lib/utils';
 import type { Application, ApplicationStatus } from '@/types/application';
@@ -18,36 +16,38 @@ export interface ApplicationCardProps {
   statusDisabled?: boolean;
 }
 
-/** Карточка вакансии для представления «списком». */
+/** Карточка вакансии для представления «списком»: белая поверхность без рамки. */
 export function ApplicationCard({ application, onStatusChange, statusDisabled }: ApplicationCardProps) {
   return (
-    <Card className="group relative p-4 transition-colors hover:border-accent/50">
+    <div className="group squircle relative rounded-card bg-surface p-4 shadow-card transition duration-200 ease-[var(--ease-ios)] hover:shadow-pop">
       <Link
         to={`/applications/${application.id}`}
-        className="absolute inset-0 rounded-xl"
+        className="absolute inset-0 rounded-card"
         aria-label={`Открыть вакансию: ${application.company} — ${application.position}`}
       />
 
       <div className="pointer-events-none flex flex-col gap-2 pr-40">
         <div className="min-w-0">
-          <h3 className="truncate font-semibold text-text">{application.position}</h3>
-          <p className="truncate text-sm text-muted">{application.company}</p>
+          <h3 className="truncate text-[17px] font-semibold tracking-[-0.01em] text-text">
+            {application.position}
+          </h3>
+          <p className="truncate text-[15px] text-muted">{application.company}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted">
           {application.location && (
             <span className="inline-flex items-center gap-1">
-              <MapPin className="size-3.5" aria-hidden />
+              <MapPin className="size-3.5" strokeWidth={1.75} aria-hidden />
               {application.location}
             </span>
           )}
-          <span>{formatSalaryRange(application.salary_min, application.salary_max)}</span>
+          <span className="tabular">{formatSalaryRange(application.salary_min, application.salary_max)}</span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <PriorityBadge priority={application.priority} />
           {application.next_action_at && (
-            <span className="inline-flex items-center gap-1 text-xs text-warning">
-              <CalendarClock className="size-3.5" aria-hidden />
-              {formatRelativeDate(application.next_action_at)}, {formatDate(application.next_action_at)}
+            <span className="inline-flex items-center gap-1 text-[13px] font-medium text-warning-strong">
+              <CalendarClock className="size-3.5" strokeWidth={1.75} aria-hidden />
+              {formatDueDate(application.next_action_at)}
             </span>
           )}
         </div>
@@ -63,6 +63,6 @@ export function ApplicationCard({ application, onStatusChange, statusDisabled }:
           label={`Статус вакансии ${application.company}: изменить`}
         />
       </div>
-    </Card>
+    </div>
   );
 }

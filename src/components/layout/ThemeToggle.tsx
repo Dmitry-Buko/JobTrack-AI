@@ -1,4 +1,4 @@
-import { Moon, Sun } from 'lucide-react';
+import { MoonStar, Sun } from 'lucide-react';
 
 import { useTheme } from '@/components/theme/ThemeProvider';
 
@@ -11,9 +11,13 @@ export function ThemeToggle() {
       type="button"
       onClick={toggleTheme}
       aria-label={isDark ? 'Включить светлую тему' : 'Включить тёмную тему'}
-      className="flex size-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-muted hover:text-text"
+      className="flex size-9 items-center justify-center rounded-full text-muted transition duration-200 ease-[var(--ease-ios)] hover:bg-black/[0.05] hover:text-text active:scale-95 dark:hover:bg-white/[0.08]"
     >
-      {isDark ? <Sun className="size-[18px]" aria-hidden /> : <Moon className="size-[18px]" aria-hidden />}
+      {isDark ? (
+        <Sun className="size-[18px]" strokeWidth={1.75} aria-hidden />
+      ) : (
+        <MoonStar className="size-[18px]" strokeWidth={1.75} aria-hidden />
+      )}
     </button>
   );
 }

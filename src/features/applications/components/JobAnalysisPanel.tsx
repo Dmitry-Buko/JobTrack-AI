@@ -147,7 +147,7 @@ export function JobAnalysisPanel({ application }: { application: Application }) 
         {isAnalyzing && <Skeleton className="h-40" />}
 
         {error && (
-          <p role="alert" className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">
+          <p role="alert" className="rounded-control bg-danger-soft px-3 py-2 text-[15px] text-danger-strong">
             {error}
           </p>
         )}
@@ -168,7 +168,7 @@ export function JobAnalysisPanel({ application }: { application: Application }) 
         )}
 
         {analyses.length > 0 && (
-          <div className="mt-5 border-t border-border pt-4">
+          <div className="mt-5 border-t border-separator pt-4">
             <h4 className="mb-2 flex items-center gap-1.5 text-sm font-medium text-text">
               <Clock className="size-4 text-muted" aria-hidden />
               Предыдущие анализы

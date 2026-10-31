@@ -108,6 +108,37 @@ export const sessionsApi = createApi({
         { type: 'Session', id: sessionId },
       ],
     }),
+
+    /**
+     * Точечное обновление сообщения: фоновая оценка ответа теста
+     * и флаг «подсказка использована» на вопросе.
+     */
+    updateMessage: builder.mutation<
+      InterviewMessage,
+      {
+        id: string;
+        sessionId: string;
+        evaluation?: InterviewMessage['evaluation'];
+        hintUsed?: boolean;
+      }
+    >({
+      queryFn: async ({ id, evaluation, hintUsed }) => {
+        const patch: Record<string, unknown> = {};
+        if (evaluation !== undefined) patch.evaluation = evaluation;
+        if (hintUsed !== undefined) patch.hint_used = hintUsed;
+        const { data, error } = await supabase
+          .from('interview_messages')
+          .update(patch)
+          .eq('id', id)
+          .select()
+          .single();
+        if (error) return { error: { message: error.message } };
+        return { data: data as InterviewMessage };
+      },
+      invalidatesTags: (_result, _error, { sessionId }) => [
+        { type: 'Messages', id: sessionId },
+      ],
+    }),
   }),
 });
 
@@ -118,4 +149,5 @@ export const {
   useFinishSessionMutation,
   useGetMessagesQuery,
   useAddMessagesMutation,
+  useUpdateMessageMutation,
 } = sessionsApi;

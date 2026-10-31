@@ -21,10 +21,21 @@ describe('parseAiResponse', () => {
 });
 
 describe('questionsResponseSchema', () => {
-  it('требует непустой список вопросов', () => {
-    expect(questionsResponseSchema.safeParse({ questions: ['Что такое замыкание?'] }).success).toBe(true);
+  it('требует непустой список вопросов с подтемой или null', () => {
+    expect(
+      questionsResponseSchema.safeParse({
+        questions: [{ question: 'Что такое замыкание?', subtopic: 'functions_closures' }],
+      }).success,
+    ).toBe(true);
+    expect(
+      questionsResponseSchema.safeParse({
+        questions: [{ question: 'Что такое замыкание?', subtopic: null }],
+      }).success,
+    ).toBe(true);
     expect(questionsResponseSchema.safeParse({ questions: [] }).success).toBe(false);
-    expect(questionsResponseSchema.safeParse({ questions: [''] }).success).toBe(false);
+    expect(
+      questionsResponseSchema.safeParse({ questions: [{ question: '', subtopic: null }] }).success,
+    ).toBe(false);
   });
 });
 

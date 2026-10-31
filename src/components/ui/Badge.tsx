@@ -7,11 +7,12 @@ export interface BadgeProps {
   children: ReactNode;
 }
 
+/** Капсула-бейдж: мягкая заливка цветом статуса, без рамки. */
 export function Badge({ className, children }: BadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium',
+        'inline-flex items-center gap-1 rounded-full px-2.5 py-[3px] text-xs font-medium',
         className,
       )}
     >

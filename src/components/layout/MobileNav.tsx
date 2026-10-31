@@ -4,11 +4,15 @@ import { cn } from '@/lib/utils';
 
 import { NAV_ITEMS } from './navItems';
 
+/** Нижний tab bar в духе iPhone: blur-фон, подписи 10–11px, safe-area снизу. */
 export function MobileNav() {
   return (
     <nav
       aria-label="Мобильная навигация"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface lg:hidden"
+      className={cn(
+        'fixed inset-x-0 bottom-0 z-30 border-t border-separator bg-surface/80 backdrop-blur-2xl lg:hidden',
+      )}
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <ul className="flex items-stretch justify-around">
         {NAV_ITEMS.map((item) => (
@@ -17,13 +21,22 @@ export function MobileNav() {
               to={item.to}
               className={({ isActive }) =>
                 cn(
-                  'flex flex-col items-center gap-1 px-1 py-2.5 text-[11px] font-medium',
+                  'flex flex-col items-center gap-0.5 px-1 pt-2 pb-1.5 text-[11px] font-medium',
+                  'transition duration-200 ease-[var(--ease-ios)] active:scale-[0.95]',
                   isActive ? 'text-accent' : 'text-muted',
                 )
               }
             >
-              <item.icon className="size-5" aria-hidden />
-              {item.label}
+              {({ isActive }) => (
+                <>
+                  <item.icon
+                    className={cn('size-6', isActive ? 'scale-105' : undefined)}
+                    strokeWidth={isActive ? 2 : 1.75}
+                    aria-hidden
+                  />
+                  {item.label}
+                </>
+              )}
             </NavLink>
           </li>
         ))}

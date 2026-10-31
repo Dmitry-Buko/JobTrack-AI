@@ -3,9 +3,13 @@ import { describe, expect, it } from 'vitest';
 import { formatDate, formatRelativeDate, formatSalaryRange, pluralize, toDateInputValue } from './utils';
 
 describe('formatDate', () => {
-  it('форматирует ISO-дату в дд.мм.гггг', () => {
-    expect(formatDate('2026-03-05')).toBe('05.03.2026');
-    expect(formatDate('2026-03-05T14:30:00Z')).toBe('05.03.2026');
+  it('форматирует ISO-дату в человеческий вид «5 мар»', () => {
+    const year = new Date().getFullYear();
+    expect(formatDate(`${year}-03-05`)).toBe('5 мар');
+  });
+
+  it('добавляет год, если он не текущий', () => {
+    expect(formatDate('2020-03-05')).toBe('5 мар 2020');
   });
 
   it('возвращает тире для пустого значения', () => {
@@ -53,7 +57,7 @@ describe('formatRelativeDate', () => {
   it('узнаёт сегодня и завтра', () => {
     const now = new Date().toISOString();
     const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
-    expect(formatRelativeDate(now)).toBe('сегодня');
-    expect(formatRelativeDate(tomorrow)).toBe('завтра');
+    expect(formatRelativeDate(now)).toBe('Сегодня');
+    expect(formatRelativeDate(tomorrow)).toBe('Завтра');
   });
 });
