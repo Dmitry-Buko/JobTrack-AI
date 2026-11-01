@@ -100,12 +100,12 @@ export function ApplicationsToolbar({
         </Select>
       </div>
 
-      <div className="flex items-end justify-between gap-3 lg:justify-end">
+      <div className="flex flex-wrap items-end justify-between gap-3 lg:justify-end">
         <Select
           label="Сортировка"
           value={sort}
           onChange={(event) => onSortChange(event.target.value as ApplicationSort)}
-          className="sm:min-w-52"
+          className="min-w-0 basis-full sm:min-w-52 sm:basis-auto"
         >
           {Object.entries(SORT_LABELS).map(([value, label]) => (
             <option key={value} value={value}>

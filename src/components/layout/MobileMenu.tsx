@@ -1,5 +1,6 @@
 import { Menu, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { NavLink } from 'react-router-dom';
 
 import { cn } from '@/lib/utils';
@@ -8,8 +9,10 @@ import { LogoMark, LogoWordmark } from './Logo';
 import { NAV_ITEMS } from './navItems';
 
 /**
- * Бургер-меню для мобильных: кнопка в шапке и выезжающая справа панель
- * с теми же пунктами, что в сайдбаре десктопа.
+ * Бургер-меню для мобильных: кнопка в шапке и выезжающая слева панель
+ * с теми же пунктами, что в сайдбаре десктопа. Панель рендерится через
+ * портал в body: шапка с backdrop-blur создаёт containing block для fixed,
+ * и без портала drawer оказался бы зажат внутри полосы шапки.
  */
 export function MobileMenu() {
   const [open, setOpen] = useState(false);
@@ -41,25 +44,26 @@ export function MobileMenu() {
         <Menu className="size-[18px]" strokeWidth={1.75} aria-hidden />
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-[2px] animate-appear"
-            onClick={() => setOpen(false)}
-            aria-hidden
-          />
-          <div
-            ref={panelRef}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Меню"
-            tabIndex={-1}
-            style={{ paddingTop: 'env(safe-area-inset-top)' }}
-            className={cn(
-              'absolute inset-y-0 right-0 flex w-[82%] max-w-80 flex-col outline-none',
-              'border-l border-separator bg-surface/85 backdrop-blur-2xl shadow-raised animate-drawer-in',
-            )}
-          >
+      {open &&
+        createPortal(
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div
+              className="absolute inset-0 bg-black/40 backdrop-blur-[2px] animate-appear"
+              onClick={() => setOpen(false)}
+              aria-hidden
+            />
+            <div
+              ref={panelRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Меню"
+              tabIndex={-1}
+              style={{ paddingTop: 'env(safe-area-inset-top)' }}
+              className={cn(
+                'absolute inset-y-0 left-0 flex w-[82%] max-w-80 flex-col outline-none',
+                'border-r border-separator bg-surface/85 backdrop-blur-2xl shadow-raised animate-drawer-in',
+              )}
+            >
             <div className="flex items-center justify-between gap-3 px-5 pb-2 pt-5">
               <div className="flex items-center gap-2.5">
                 <LogoMark />
@@ -97,8 +101,9 @@ export function MobileMenu() {
               ))}
             </nav>
           </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

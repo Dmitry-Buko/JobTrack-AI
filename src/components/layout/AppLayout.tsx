@@ -23,12 +23,12 @@ export function AppLayout() {
           style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
         >
           <div className="flex items-center gap-2">
+            <MobileMenu />
             <LogoMark className="size-8 rounded-[9px]" />
             <LogoWordmark />
           </div>
           <div className="flex items-center gap-1">
             <ThemeToggle />
-            <MobileMenu />
             <button
               type="button"
               aria-label="Выйти из аккаунта"
