@@ -21,6 +21,7 @@ import { INTERVIEW_MODE_LABELS, TOPIC_LABELS } from '@/types/interview';
 import { WORK_FORMAT_LABELS, type ApplicationStatus } from '@/types/application';
 
 import { useDeleteApplicationMutation, useGetApplicationQuery, useUpdateApplicationMutation } from '../api/applicationsApi';
+import { CoverLetterPanel } from '../components/CoverLetterPanel';
 import { JobAnalysisPanel } from '../components/JobAnalysisPanel';
 import { PriorityBadge } from '../components/PriorityBadge';
 import { StatusMenu } from '../components/StatusMenu';
@@ -188,6 +189,8 @@ export function ApplicationDetailPage() {
       </Card>
 
       <JobAnalysisPanel application={application} />
+
+      <CoverLetterPanel application={application} />
 
       <Card>
         <CardHeader

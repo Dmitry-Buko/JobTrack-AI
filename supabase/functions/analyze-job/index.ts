@@ -4,7 +4,7 @@ import { requireUser } from '../shared/auth.ts';
 import { handleOptions, jsonError, jsonOk } from '../shared/cors.ts';
 import { chatJson, GeminiError } from '../shared/gemini.ts';
 import { checkRateLimit } from '../shared/ratelimit.ts';
-import { clampText, parseBody } from '../shared/validate.ts';
+import { clampedString, clampText, parseBody } from '../shared/validate.ts';
 
 const ANALYST_SYSTEM =
   'Ты — карьерный консультант и технический рекрутёр по frontend-разработке. ' +
@@ -15,7 +15,8 @@ const ANALYST_SYSTEM =
 const bodySchema = z.object({
   company: z.string().max(200),
   position: z.string().max(200),
-  description: z.string().min(1).max(8000),
+  // Вставленное описание вакансии может быть длинным — обрезаем до валидации.
+  description: clampedString(8000, { min: 1 }),
   targetRole: z.string().max(200).nullable(),
   skills: z
     .array(z.object({ name: z.string().max(120), level: z.number().int().min(1).max(5) }))

@@ -76,6 +76,10 @@ export const realtimeSessionResponseSchema = z.object({
   expires_at: z.number().nullable().optional(),
 });
 
+export const coverLetterResponseSchema = z.object({
+  cover_letter: z.string().min(1),
+});
+
 export type ParseResult<T> =
   | { ok: true; data: T }
   | { ok: false; message: string };

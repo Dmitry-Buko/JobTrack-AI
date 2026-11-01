@@ -52,6 +52,29 @@ describe('filterApplications', () => {
     expect(filterApplications(applications, { ...DEFAULT_FILTERS, status: 'offer' })).toHaveLength(1);
     expect(filterApplications(applications, { ...DEFAULT_FILTERS, priority: 'high' })).toHaveLength(1);
   });
+
+  it('«Ближайшие 7 дней»: сегодняшние и будущие даты в пределах недели', () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const items = [
+      makeApplication({ id: 'today', next_action_at: today }),
+      makeApplication({ id: 'in-3-days', next_action_at: new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10) }),
+      makeApplication({ id: 'in-8-days', next_action_at: new Date(Date.now() + 8 * 86_400_000).toISOString().slice(0, 10) }),
+      makeApplication({ id: 'yesterday', next_action_at: new Date(Date.now() - 86_400_000).toISOString().slice(0, 10) }),
+      makeApplication({ id: 'no-date', next_action_at: null }),
+    ];
+    const week = filterApplications(items, { ...DEFAULT_FILTERS, due: 'week' });
+    expect(week.map((item) => item.id)).toEqual(['today', 'in-3-days']);
+  });
+
+  it('«Просроченные»: только прошедшие даты', () => {
+    const items = [
+      makeApplication({ id: 'old', next_action_at: '2020-01-01' }),
+      makeApplication({ id: 'future', next_action_at: '2099-01-01' }),
+      makeApplication({ id: 'no-date', next_action_at: null }),
+    ];
+    const overdue = filterApplications(items, { ...DEFAULT_FILTERS, due: 'overdue' });
+    expect(overdue.map((item) => item.id)).toEqual(['old']);
+  });
 });
 
 describe('sortApplications', () => {

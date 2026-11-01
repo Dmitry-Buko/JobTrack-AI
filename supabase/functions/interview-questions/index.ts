@@ -2,7 +2,7 @@ import { handleOptions, jsonError, jsonOk } from '../shared/cors.ts';
 import { requireUser } from '../shared/auth.ts';
 import { chatJson, GeminiError, maxQuestions } from '../shared/gemini.ts';
 import { checkRateLimit } from '../shared/ratelimit.ts';
-import { clampText, parseBody } from '../shared/validate.ts';
+import { clampedString, clampText, parseBody } from '../shared/validate.ts';
 import {
   applicationBlock,
   difficultyExpectations,
@@ -32,7 +32,7 @@ const bodySchema = z.object({
     .object({
       company: z.string().max(200),
       position: z.string().max(200),
-      description: z.string().max(8000).nullable(),
+      description: clampedString(8000).nullable(),
     })
     .nullable(),
   // Подтемы теста: только ключи allowlist, без свободного текста.

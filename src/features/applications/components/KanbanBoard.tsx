@@ -15,7 +15,7 @@ import {
 import { CalendarClock, GripVertical } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import { cn, formatDueDate, formatSalaryRange } from '@/lib/utils';
+import { cn, formatDueDate, formatSalaryRange, isOverdue } from '@/lib/utils';
 import {
   APPLICATION_STATUSES,
   APPLICATION_STATUS_META,
@@ -90,7 +90,11 @@ function KanbanCard({ application, onStatusChange, statusDisabled }: KanbanCardP
           <div className="flex flex-wrap items-center gap-1.5">
             <PriorityBadge priority={application.priority} />
             {application.next_action_at && (
-              <span className="inline-flex items-center gap-1 text-[12px] font-medium text-warning-strong">
+              <span
+                className={`inline-flex items-center gap-1 text-[12px] font-medium ${
+                  isOverdue(application.next_action_at) ? 'text-danger-strong' : 'text-warning-strong'
+                }`}
+              >
                 <CalendarClock className="size-3" strokeWidth={1.75} aria-hidden />
                 {formatDueDate(application.next_action_at)}
               </span>

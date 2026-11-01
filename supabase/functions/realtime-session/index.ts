@@ -11,7 +11,7 @@ import {
 } from '../shared/interview.ts';
 import { liveModel, maxQuestions } from '../shared/gemini.ts';
 import { checkRateLimit } from '../shared/ratelimit.ts';
-import { clampText, parseBody } from '../shared/validate.ts';
+import { clampedString, clampText, parseBody } from '../shared/validate.ts';
 
 const AUTH_TOKENS_URL = 'https://generativelanguage.googleapis.com/v1beta/auth_tokens';
 
@@ -33,7 +33,7 @@ const bodySchema = z.object({
     .object({
       company: z.string().max(200),
       position: z.string().max(200),
-      description: z.string().max(8000).nullable(),
+      description: clampedString(8000).nullable(),
     })
     .nullable(),
 });

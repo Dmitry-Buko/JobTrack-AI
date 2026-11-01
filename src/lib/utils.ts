@@ -79,6 +79,14 @@ export function formatDueDate(iso: string): string {
   return formatDate(iso);
 }
 
+/** Просрочено ли действие: дата раньше сегодняшнего дня (null — не просрочено). */
+export function isOverdue(iso: string | null | undefined): boolean {
+  if (!iso) return false;
+  const date = parseDate(iso);
+  if (!date) return false;
+  return startOfDay(date) < startOfDay(new Date());
+}
+
 /** Диапазон зарплаты: «100 000 – 150 000» (с обычными пробелами). */
 export function formatSalaryRange(
   min: number | null | undefined,

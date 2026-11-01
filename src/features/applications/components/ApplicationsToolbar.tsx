@@ -14,7 +14,13 @@ import {
   type ApplicationStatus,
 } from '@/types/application';
 
-import { SORT_LABELS, type ApplicationFilters, type ApplicationSort } from '../lib/filters';
+import {
+  DUE_FILTER_LABELS,
+  SORT_LABELS,
+  type ApplicationDueFilter,
+  type ApplicationFilters,
+  type ApplicationSort,
+} from '../lib/filters';
 
 export type ApplicationsView = 'list' | 'board';
 
@@ -37,7 +43,7 @@ export function ApplicationsToolbar({
 }: ApplicationsToolbarProps) {
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-      <div className="grid flex-1 gap-3 sm:grid-cols-3">
+      <div className="grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Input
           type="search"
           label="Поиск"
@@ -45,6 +51,22 @@ export function ApplicationsToolbar({
           value={filters.search}
           onChange={(event) => onFiltersChange({ ...filters, search: event.target.value })}
         />
+        <Select
+          label="Сроки"
+          value={filters.due}
+          onChange={(event) =>
+            onFiltersChange({
+              ...filters,
+              due: event.target.value as ApplicationDueFilter,
+            })
+          }
+        >
+          {(Object.keys(DUE_FILTER_LABELS) as ApplicationDueFilter[]).map((value) => (
+            <option key={value} value={value}>
+              {DUE_FILTER_LABELS[value]}
+            </option>
+          ))}
+        </Select>
         <Select
           label="Статус"
           value={filters.status}

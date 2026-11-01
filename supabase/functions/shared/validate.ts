@@ -9,6 +9,19 @@ export function clampText(value: string, max = MAX_TEXT_LENGTH): string {
   return value.length > max ? value.slice(0, max) : value;
 }
 
+/**
+ * Строка, которая обрезается до max ещё ДО валидации: сверхдлинный
+ * пользовательский текст (например, голосовая диктовка) не должен
+ * ронять запрос 400-й ошибкой схемы.
+ */
+export function clampedString(max: number, options: { min?: number } = {}) {
+  const base = options.min != null ? z.string().min(options.min).max(max) : z.string().max(max);
+  return z.preprocess(
+    (value) => (typeof value === 'string' ? clampText(value, max) : value),
+    base,
+  );
+}
+
 export type BodyResult<T> = { data: T } | { error: Response };
 
 export async function parseBody<T>(

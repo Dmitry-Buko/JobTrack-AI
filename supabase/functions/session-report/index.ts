@@ -10,11 +10,12 @@ import {
 } from '../shared/interview.ts';
 import { chatJson, GeminiError } from '../shared/gemini.ts';
 import { checkRateLimit } from '../shared/ratelimit.ts';
-import { clampText, parseBody } from '../shared/validate.ts';
+import { clampedString, clampText, parseBody } from '../shared/validate.ts';
 
 const messageSchema = z.object({
   role: z.enum(['assistant', 'user']),
-  content: z.string().max(4000),
+  // Ответ мог быть надиктован голосом и превысить лимит — обрезаем до валидации.
+  content: clampedString(4000),
   evaluation: z.unknown().optional(),
 });
 

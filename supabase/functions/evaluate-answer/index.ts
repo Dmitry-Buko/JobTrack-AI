@@ -11,12 +11,13 @@ import {
 import { JS_SUBTOPIC_KEYS, subtopicLabel } from '../shared/subtopics.ts';
 import { chatJson, GeminiError } from '../shared/gemini.ts';
 import { checkRateLimit } from '../shared/ratelimit.ts';
-import { clampText, parseBody } from '../shared/validate.ts';
+import { clampedString, clampText, parseBody } from '../shared/validate.ts';
 
 const bodySchema = z.object({
-  question: z.string().min(1).max(2000),
+  question: clampedString(2000, { min: 1 }),
   // В режиме подсказки (hint) ответа ещё нет — поле необязательное.
-  answer: z.string().max(8000).optional(),
+  // Длинная диктовка обрезается до валидации, а не роняет запрос.
+  answer: clampedString(8000).optional(),
   topic: z.enum([
     'javascript',
     'typescript',

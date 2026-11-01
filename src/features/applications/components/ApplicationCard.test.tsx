@@ -51,4 +51,19 @@ describe('ApplicationCard', () => {
     const link = screen.getByRole('link', { name: /Открыть вакансию: Яндекс/i });
     expect(link).toHaveAttribute('href', '/applications/app-1');
   });
+
+  it('с датой действия показывает кнопку «Добавить в календарь»', () => {
+    render(
+      <MemoryRouter>
+        <ApplicationCard
+          application={{ ...application, next_action_at: '2099-01-01' }}
+          onStatusChange={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(
+      screen.getByRole('button', { name: /Добавить в календарь/i }),
+    ).toBeInTheDocument();
+  });
 });

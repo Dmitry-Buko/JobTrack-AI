@@ -13,6 +13,7 @@ import type {
 
 import {
   analysisResponseSchema,
+  coverLetterResponseSchema,
   evaluationResponseSchema,
   hintResponseSchema,
   parseAiResponse,
@@ -98,6 +99,17 @@ export interface RealtimeSessionInfo {
   token: string;
   model: string;
   expiresAt: number | null;
+}
+
+/** Данные для генерации сопроводительного письма: вакансия + профиль кандидата. */
+export interface CoverLetterArgs {
+  company: string;
+  position: string;
+  description?: string;
+  targetRole?: string | null;
+  experienceLevel?: string | null;
+  experienceSummary?: string | null;
+  skills: Array<{ name: string; level: number }>;
 }
 
 /**
@@ -192,6 +204,15 @@ export const aiApi = createApi({
           : { error: result.error ?? { message: 'Не удалось создать голосовую сессию.' } };
       },
     }),
+
+    generateCoverLetter: builder.mutation<string, CoverLetterArgs>({
+      queryFn: async (args) => {
+        const result = await invokeFunction('generate-cover-letter', { ...args }, coverLetterResponseSchema);
+        return result.data
+          ? { data: result.data.cover_letter }
+          : { error: result.error ?? { message: 'Не удалось составить письмо.' } };
+      },
+    }),
   }),
 });
 
@@ -202,4 +223,5 @@ export const {
   useGenerateReportMutation,
   useAnalyzeJobMutation,
   useCreateRealtimeSessionMutation,
+  useGenerateCoverLetterMutation,
 } = aiApi;

@@ -50,7 +50,10 @@ export function ApplicationsPage() {
   };
 
   const hasFilters =
-    filters.search.trim() !== '' || filters.status !== 'all' || filters.priority !== 'all';
+    filters.search.trim() !== '' ||
+    filters.status !== 'all' ||
+    filters.priority !== 'all' ||
+    filters.due !== 'all';
 
   return (
     <div className="space-y-6">
