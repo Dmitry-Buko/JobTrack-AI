@@ -2,7 +2,7 @@ import { LogOut } from 'lucide-react';
 import { Outlet, useNavigate } from 'react-router-dom';
 
 import { ThemeToggle } from './ThemeToggle';
-import { MobileNav } from './MobileNav';
+import { MobileMenu } from './MobileMenu';
 import { Sidebar } from './Sidebar';
 import { LogoMark, LogoWordmark } from './Logo';
 import { signOut } from '@/features/auth/lib/authService';
@@ -28,6 +28,7 @@ export function AppLayout() {
           </div>
           <div className="flex items-center gap-1">
             <ThemeToggle />
+            <MobileMenu />
             <button
               type="button"
               aria-label="Выйти из аккаунта"
@@ -42,11 +43,9 @@ export function AppLayout() {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-6xl px-4 pb-28 pt-5 lg:px-8 lg:pb-12 lg:pt-9">
+        <main className="mx-auto w-full max-w-6xl px-4 pb-12 pt-5 lg:px-8 lg:pt-9">
           <Outlet />
         </main>
-
-        <MobileNav />
       </div>
     </div>
   );

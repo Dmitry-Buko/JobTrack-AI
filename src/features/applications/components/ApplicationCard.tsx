@@ -23,14 +23,16 @@ export function ApplicationCard({ application, onStatusChange, statusDisabled }:
   const overdue = isOverdue(application.next_action_at);
 
   return (
-    <div className="group squircle relative rounded-card bg-surface p-4 shadow-card transition duration-200 ease-[var(--ease-ios)] hover:shadow-pop">
+    <div className="group squircle relative min-w-0 rounded-card bg-surface p-4 shadow-card transition duration-200 ease-[var(--ease-ios)] hover:shadow-pop">
       <Link
         to={`/applications/${application.id}`}
         className="absolute inset-0 rounded-card"
         aria-label={`Открыть вакансию: ${application.company} — ${application.position}`}
       />
 
-      <div className="pointer-events-none flex flex-col gap-2 pr-40">
+      {/* На мобильных кнопки статуса и календаря идут в общем потоке после текста,
+          на sm+ — как раньше, абсолютом в правом верхнем углу (под них pr-40). */}
+      <div className="pointer-events-none flex flex-col gap-2 sm:pr-40">
         <div className="min-w-0">
           <h3 className="truncate text-[17px] font-semibold tracking-[-0.01em] text-text">
             {application.position}
@@ -60,28 +62,28 @@ export function ApplicationCard({ application, onStatusChange, statusDisabled }:
             </span>
           )}
         </div>
-      </div>
 
-      <div className="pointer-events-auto absolute right-3 top-3 z-10 flex items-center gap-2">
-        {application.next_action_at && (
-          <button
-            type="button"
-            onClick={() => downloadApplicationIcs(application)}
-            aria-label={`Добавить в календарь: ${application.company} — ${application.position}`}
-            title="Добавить в календарь"
-            className="flex size-8 items-center justify-center rounded-full text-muted transition duration-200 ease-[var(--ease-ios)] hover:bg-surface-muted hover:text-text active:scale-95"
-          >
-            <CalendarPlus className="size-4" strokeWidth={1.75} aria-hidden />
-          </button>
-        )}
-        <StatusMenu
-          value={application.status}
-          onChange={onStatusChange}
-          disabled={statusDisabled}
-          size="sm"
-          align="right"
-          label={`Статус вакансии ${application.company}: изменить`}
-        />
+        <div className="pointer-events-auto relative z-10 flex items-center gap-2 sm:absolute sm:right-3 sm:top-3">
+          {application.next_action_at && (
+            <button
+              type="button"
+              onClick={() => downloadApplicationIcs(application)}
+              aria-label={`Добавить в календарь: ${application.company} — ${application.position}`}
+              title="Добавить в календарь"
+              className="flex size-8 items-center justify-center rounded-full text-muted transition duration-200 ease-[var(--ease-ios)] hover:bg-surface-muted hover:text-text active:scale-95"
+            >
+              <CalendarPlus className="size-4" strokeWidth={1.75} aria-hidden />
+            </button>
+          )}
+          <StatusMenu
+            value={application.status}
+            onChange={onStatusChange}
+            disabled={statusDisabled}
+            size="sm"
+            align="right"
+            label={`Статус вакансии ${application.company}: изменить`}
+          />
+        </div>
       </div>
     </div>
   );

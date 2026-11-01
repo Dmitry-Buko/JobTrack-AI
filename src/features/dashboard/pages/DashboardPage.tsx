@@ -193,11 +193,12 @@ export function DashboardPage() {
         </div>
       </section>
 
-      {/* Inset-группы */}
+      {/* Inset-группы. min-w-0 на секциях обязателен: без него строки с truncate
+          раздувают грид-колонку шире экрана и появляется горизонтальный скролл */}
       <div className="grid gap-5 lg:grid-cols-2">
-        <section>
+        <section className="min-w-0">
           <div className="mb-1.5 flex items-center justify-between gap-3 px-1">
-            <p className="text-[13px] font-medium tracking-[0.02em] text-muted uppercase">
+            <p className="min-w-0 text-[13px] font-medium tracking-[0.02em] text-muted uppercase">
               Последние тренировки
               {averageScore != null && (
                 <span className="tabular ml-2 rounded-full bg-accent-soft px-2 py-0.5 text-[12px] font-semibold tracking-normal text-accent normal-case">
@@ -244,7 +245,7 @@ export function DashboardPage() {
           </ListGroup>
         </section>
 
-        <section>
+        <section className="min-w-0">
           <p className="mb-1.5 px-1 text-[13px] font-medium tracking-[0.02em] text-muted uppercase">
             Что повторить
           </p>
@@ -272,9 +273,9 @@ export function DashboardPage() {
           </ListGroup>
         </section>
 
-        <section>
+        <section className="min-w-0">
           <div className="mb-1.5 flex items-center justify-between gap-3 px-1">
-            <p className="text-[13px] font-medium tracking-[0.02em] text-muted uppercase">
+            <p className="min-w-0 text-[13px] font-medium tracking-[0.02em] text-muted uppercase">
               Вакансии в работе
             </p>
             <Link

@@ -200,6 +200,19 @@
   animation: pop-in 0.24s var(--ease-ios) both;
 }
 
+@utility animate-drawer-in {
+  animation: drawer-in 0.3s var(--ease-ios) both;
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 @keyframes appear {
   from {
     opacity: 0;
