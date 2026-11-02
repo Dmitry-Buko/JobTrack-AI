@@ -80,6 +80,44 @@ export const coverLetterResponseSchema = z.object({
   cover_letter: z.string().min(1),
 });
 
+const marketMatchSchema = z.object({
+  percent: z.number().min(0).max(100),
+  matched: z.array(z.string()),
+  missing: z.array(z.string()),
+  summary: z.string(),
+});
+
+const marketVacancySchema = z.object({
+  id: z.string().min(1),
+  source: z.enum(['telegram', 'remoteok', 'wwr']),
+  // TG-канал происхождения («devby»); у остальных источников пуст.
+  channel: z.string().optional(),
+  url: z.string().min(1),
+  company: z.string(),
+  position: z.string(),
+  location: z.string(),
+  salary: z.string(),
+  description: z.string(),
+  publishedAt: z.string(),
+  // null — AI-матчинг недоступен (кроме процентов, вакансия полноценна).
+  match: marketMatchSchema.nullable(),
+});
+
+export const marketSearchResponseSchema = z.object({
+  vacancies: z.array(marketVacancySchema),
+  meta: z.object({
+    fetched: z.record(z.number()),
+    errors: z.array(z.string()),
+    total: z.number().int().nonnegative(),
+    aiUsed: z.boolean(),
+    aiError: z.string().optional(),
+    cached: z.boolean().optional(),
+  }),
+});
+
+export type MarketVacancy = z.infer<typeof marketVacancySchema>;
+export type MarketSearchResponse = z.infer<typeof marketSearchResponseSchema>;
+
 export type ParseResult<T> =
   | { ok: true; data: T }
   | { ok: false; message: string };

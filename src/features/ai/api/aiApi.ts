@@ -4,6 +4,7 @@ import type { ZodType } from 'zod';
 
 import { supabase } from '@/lib/supabase';
 import type { JobAnalysisResult } from '@/types/job-analysis';
+import type { MarketSearchResponse } from '../lib/schemas';
 import type {
   AnswerEvaluation,
   InterviewDifficulty,
@@ -16,6 +17,7 @@ import {
   coverLetterResponseSchema,
   evaluationResponseSchema,
   hintResponseSchema,
+  marketSearchResponseSchema,
   parseAiResponse,
   questionsResponseSchema,
   realtimeSessionResponseSchema,
@@ -110,6 +112,19 @@ export interface CoverLetterArgs {
   experienceLevel?: string | null;
   experienceSummary?: string | null;
   skills: Array<{ name: string; level: number }>;
+}
+
+/** Профиль соискателя для рыночного поиска вакансий. */
+export interface MarketProfile {
+  role: string;
+  skills: string[];
+  level: 'junior' | 'junior_plus' | 'middle';
+  locations: string[];
+}
+
+export interface MarketSearchArgs {
+  profile: MarketProfile;
+  limit?: number;
 }
 
 /**
@@ -213,6 +228,15 @@ export const aiApi = createApi({
           : { error: result.error ?? { message: 'Не удалось составить письмо.' } };
       },
     }),
+
+    searchMarket: builder.mutation<MarketSearchResponse, MarketSearchArgs>({
+      queryFn: async (args) => {
+        const result = await invokeFunction('market-search', { ...args }, marketSearchResponseSchema);
+        return result.data
+          ? { data: result.data }
+          : { error: result.error ?? { message: 'Не удалось выполнить поиск вакансий.' } };
+      },
+    }),
   }),
 });
 
@@ -224,4 +248,5 @@ export const {
   useAnalyzeJobMutation,
   useCreateRealtimeSessionMutation,
   useGenerateCoverLetterMutation,
+  useSearchMarketMutation,
 } = aiApi;

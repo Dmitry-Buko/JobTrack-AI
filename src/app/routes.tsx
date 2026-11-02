@@ -14,6 +14,7 @@ import { ApplicationFormPage } from '@/features/applications/pages/ApplicationFo
 import { InterviewSetupPage } from '@/features/interview-coach/pages/InterviewSetupPage';
 import { InterviewSessionPage } from '@/features/interview-coach/pages/InterviewSessionPage';
 import { HistoryPage } from '@/features/history/pages/HistoryPage';
+import { JobMarketPage } from '@/features/job-market/pages/JobMarketPage';
 import { ProfilePage } from '@/features/profile/pages/ProfilePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 
@@ -34,6 +35,7 @@ export function AppRoutes() {
           <Route path="/applications/new" element={<ApplicationFormPage mode="create" />} />
           <Route path="/applications/:id" element={<ApplicationDetailPage />} />
           <Route path="/applications/:id/edit" element={<ApplicationFormPage mode="edit" />} />
+          <Route path="/market" element={<JobMarketPage />} />
           <Route path="/interview-coach" element={<InterviewSetupPage />} />
           <Route path="/interview-coach/session/:id" element={<InterviewSessionPage />} />
           <Route path="/history" element={<HistoryPage />} />

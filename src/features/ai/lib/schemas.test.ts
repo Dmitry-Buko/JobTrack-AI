@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { evaluationResponseSchema, parseAiResponse, questionsResponseSchema } from './schemas';
+import {
+  evaluationResponseSchema,
+  marketSearchResponseSchema,
+  parseAiResponse,
+  questionsResponseSchema,
+} from './schemas';
 
 describe('parseAiResponse', () => {
   const schema = z.object({ value: z.number() });
@@ -64,5 +69,47 @@ describe('evaluationResponseSchema', () => {
       scores: { ...validEvaluation.scores, correctness: { score: 9, comment: '' } },
     };
     expect(evaluationResponseSchema.safeParse(invalid).success).toBe(false);
+  });
+});
+
+describe('marketSearchResponseSchema', () => {
+  const vacancy = {
+    id: 'remoteok:1',
+    source: 'remoteok',
+    url: 'https://remoteok.com/remote-jobs/1',
+    company: 'Acme',
+    position: 'Frontend Developer',
+    location: 'Remote',
+    salary: '$60k–$90k',
+    description: 'React и TypeScript',
+    publishedAt: '2026-11-02T10:00:00.000Z',
+    match: { percent: 82, matched: ['React'], missing: ['GraphQL'], summary: 'Хорошее совпадение' },
+  };
+  const meta = { fetched: { remoteok: 1 }, errors: [], total: 1, aiUsed: true };
+
+  it('принимает вакансию с матчингом и без', () => {
+    expect(marketSearchResponseSchema.safeParse({ vacancies: [vacancy], meta }).success).toBe(true);
+    expect(
+      marketSearchResponseSchema.safeParse({ vacancies: [{ ...vacancy, match: null }], meta })
+        .success,
+    ).toBe(true);
+  });
+
+  it('принимает ответ с ошибкой AI (match: null, aiError задан)', () => {
+    const result = marketSearchResponseSchema.safeParse({
+      vacancies: [{ ...vacancy, match: null }],
+      meta: { ...meta, aiUsed: false, aiError: 'Модель перегружена' },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('отклоняет вакансию без обязательных полей', () => {
+    const { url: _url, ...withoutUrl } = vacancy;
+    expect(
+      marketSearchResponseSchema.safeParse({
+        vacancies: [{ ...withoutUrl, match: null }],
+        meta,
+      }).success,
+    ).toBe(false);
   });
 });
