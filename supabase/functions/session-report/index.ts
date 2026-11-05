@@ -11,6 +11,7 @@ import {
 import { chatJson, GeminiError } from '../shared/gemini.ts';
 import { checkRateLimit } from '../shared/ratelimit.ts';
 import { sanitizePromptText, tagBlock } from '../shared/prompt.ts';
+import { topicEnum } from '../shared/schemas.ts';
 import { clampedString, clampText, parseBody } from '../shared/validate.ts';
 
 const messageSchema = z.object({
@@ -21,16 +22,7 @@ const messageSchema = z.object({
 });
 
 const bodySchema = z.object({
-  topic: z.enum([
-    'javascript',
-    'typescript',
-    'react',
-    'redux_toolkit',
-    'html_css',
-    'browser_apis',
-    'networking',
-    'mixed',
-  ]),
+  topic: topicEnum,
   difficulty: z.enum(['junior', 'junior_plus', 'middle']),
   language: z.enum(['ru', 'en']),
   messages: z.array(messageSchema).min(1).max(200),

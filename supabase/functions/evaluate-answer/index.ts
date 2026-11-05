@@ -12,6 +12,7 @@ import { JS_SUBTOPIC_KEYS, subtopicLabel } from '../shared/subtopics.ts';
 import { chatJson, GeminiError } from '../shared/gemini.ts';
 import { checkRateLimit } from '../shared/ratelimit.ts';
 import { tagBlock } from '../shared/prompt.ts';
+import { topicEnum } from '../shared/schemas.ts';
 import { clampedString, clampText, parseBody } from '../shared/validate.ts';
 
 const bodySchema = z.object({
@@ -19,16 +20,7 @@ const bodySchema = z.object({
   // В режиме подсказки (hint) ответа ещё нет — поле необязательное.
   // Длинная диктовка обрезается до валидации, а не роняет запрос.
   answer: clampedString(8000).optional(),
-  topic: z.enum([
-    'javascript',
-    'typescript',
-    'react',
-    'redux_toolkit',
-    'html_css',
-    'browser_apis',
-    'networking',
-    'mixed',
-  ]),
+  topic: topicEnum,
   difficulty: z.enum(['junior', 'junior_plus', 'middle']),
   language: z.enum(['ru', 'en']),
   hint: z.boolean().optional(),
@@ -38,28 +30,19 @@ const bodySchema = z.object({
 
 const hintSchema = z.object({ hint: z.string().min(1) });
 
+/** Оценка по критерию: либо балл 1–5 с комментарием, либо «insufficient_data». */
+const scoreCriterion = z.union([
+  z.object({ score: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]), comment: z.string() }),
+  z.object({ status: z.literal('insufficient_data'), comment: z.string() }),
+]);
+
 const evaluationSchema = z.object({
   scores: z.object({
-    correctness: z.union([
-      z.object({ score: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]), comment: z.string() }),
-      z.object({ status: z.literal('insufficient_data'), comment: z.string() }),
-    ]),
-    completeness: z.union([
-      z.object({ score: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]), comment: z.string() }),
-      z.object({ status: z.literal('insufficient_data'), comment: z.string() }),
-    ]),
-    understanding: z.union([
-      z.object({ score: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]), comment: z.string() }),
-      z.object({ status: z.literal('insufficient_data'), comment: z.string() }),
-    ]),
-    practical_application: z.union([
-      z.object({ score: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]), comment: z.string() }),
-      z.object({ status: z.literal('insufficient_data'), comment: z.string() }),
-    ]),
-    explanation_quality: z.union([
-      z.object({ score: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]), comment: z.string() }),
-      z.object({ status: z.literal('insufficient_data'), comment: z.string() }),
-    ]),
+    correctness: scoreCriterion,
+    completeness: scoreCriterion,
+    understanding: scoreCriterion,
+    practical_application: scoreCriterion,
+    explanation_quality: scoreCriterion,
   }),
   strengths: z.array(z.string()),
   gaps: z.array(z.string()),

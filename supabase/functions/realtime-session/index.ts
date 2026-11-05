@@ -12,20 +12,12 @@ import { liveModel, maxQuestions } from '../shared/gemini.ts';
 import { checkRateLimit } from '../shared/ratelimit.ts';
 import { DATA_ONLY_RULE } from '../shared/prompt.ts';
 import { clampedString, clampText, parseBody } from '../shared/validate.ts';
+import { topicEnum } from '../shared/schemas.ts';
 
 const AUTH_TOKENS_URL = 'https://generativelanguage.googleapis.com/v1beta/auth_tokens';
 
 const bodySchema = z.object({
-  topic: z.enum([
-    'javascript',
-    'typescript',
-    'react',
-    'redux_toolkit',
-    'html_css',
-    'browser_apis',
-    'networking',
-    'mixed',
-  ]),
+  topic: topicEnum,
   difficulty: z.enum(['junior', 'junior_plus', 'middle']),
   language: z.enum(['ru', 'en']),
   questionCount: z.number().int().min(1).max(20),

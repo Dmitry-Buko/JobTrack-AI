@@ -1,6 +1,7 @@
 /** Общие данные и промпт-строители для AI-тренажёра. */
 
 import { DATA_ONLY_RULE, tagBlock } from './prompt.ts';
+import type { InterviewTopic } from './schemas.ts';
 
 export interface ApplicationContext {
   company: string;
@@ -8,7 +9,8 @@ export interface ApplicationContext {
   description: string | null;
 }
 
-export const TOPIC_LABELS: Record<string, string> = {
+/** Ключи проверяются компилятором против INTERVIEW_TOPICS (schemas.ts). */
+export const TOPIC_LABELS: Record<InterviewTopic, string> = {
   javascript: 'JavaScript',
   typescript: 'TypeScript',
   react: 'React',
@@ -20,7 +22,9 @@ export const TOPIC_LABELS: Record<string, string> = {
 };
 
 export function topicLabel(topic: string): string {
-  return TOPIC_LABELS[topic] ?? topic;
+  // Ключ приходит из zod-enum (schemas.ts), но на случай ручного вызова
+  // неизвестное значение возвращается как есть.
+  return TOPIC_LABELS[topic as InterviewTopic] ?? topic;
 }
 
 export function languageName(language: string): string {

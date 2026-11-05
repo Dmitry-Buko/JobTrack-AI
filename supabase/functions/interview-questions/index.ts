@@ -11,19 +11,11 @@ import {
   topicLabel,
 } from '../shared/interview.ts';
 import { JS_SUBTOPIC_KEYS, subtopicLabel } from '../shared/subtopics.ts';
+import { topicEnum } from '../shared/schemas.ts';
 import { z } from 'zod';
 
 const bodySchema = z.object({
-  topic: z.enum([
-    'javascript',
-    'typescript',
-    'react',
-    'redux_toolkit',
-    'html_css',
-    'browser_apis',
-    'networking',
-    'mixed',
-  ]),
+  topic: topicEnum,
   difficulty: z.enum(['junior', 'junior_plus', 'middle']),
   language: z.enum(['ru', 'en']),
   questionCount: z.number().int().min(1).max(20),
