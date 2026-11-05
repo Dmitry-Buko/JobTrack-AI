@@ -52,9 +52,12 @@ Deno.serve(async (req) => {
   const body = await parseBody(req, bodySchema);
   if ('error' in body) return body.error;
 
-  const allowed = await checkRateLimit(auth.supabase, auth.userId, 'realtime-session');
-  if (!allowed) {
+  const rate = await checkRateLimit(auth.supabase, 'realtime-session');
+  if (rate === 'limited') {
     return jsonError(429, 'Слишком много голосовых сессий за час. Попробуйте позже.');
+  }
+  if (rate === 'error') {
+    return jsonError(503, 'Не удалось проверить лимит запросов. Попробуйте позже.');
   }
 
   const apiKey = Deno.env.get('GEMINI_API_KEY');

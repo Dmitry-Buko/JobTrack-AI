@@ -2,29 +2,34 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 const DEFAULT_LIMIT_PER_HOUR = 60;
 
+export type RateLimitResult = 'ok' | 'limited' | 'error';
+
 /**
- * Ограничение частоты AI-запросов на пользователя (по таблице ai_usage).
- * Возвращает false, когда лимит превышен. Ошибка учёта не блокирует пользователя.
+ * Ограничение частоты AI-запросов на пользователя. Лимит у каждой функции
+ * свой (60/час по умолчанию, переопределяется env AI_RATE_LIMIT_PER_HOUR).
+ *
+ * Атомарность гарантирует RPC public.consume_ai_quota (миграция 0006):
+ * подсчёт записей за час и вставка новой выполняются в одной транзакции
+ * под advisory-локом, поэтому параллельные запросы не обходят лимит.
+ *
+ * 'error' означает, что RPC недоступен: вызывающая сторона обязана
+ * ответить 503 (fail-closed), а не пропускать запрос мимо лимита.
  */
 export async function checkRateLimit(
   supabase: SupabaseClient,
-  userId: string,
   functionName: string,
-): Promise<boolean> {
+): Promise<RateLimitResult> {
   const limit = Number(Deno.env.get('AI_RATE_LIMIT_PER_HOUR'));
   const perHour = Number.isFinite(limit) && limit > 0 ? limit : DEFAULT_LIMIT_PER_HOUR;
-  const oneHourAgo = new Date(Date.now() - 3_600_000).toISOString();
 
-  const { count, error } = await supabase
-    .from('ai_usage')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('function_name', functionName)
-    .gte('created_at', oneHourAgo);
+  const { data, error } = await supabase.rpc('consume_ai_quota', {
+    p_function: functionName,
+    p_limit: perHour,
+  });
 
-  if (error) return true;
-  if ((count ?? 0) >= perHour) return false;
-
-  await supabase.from('ai_usage').insert({ user_id: userId, function_name: functionName });
-  return true;
+  if (error) {
+    console.error(`consume_ai_quota failed (${functionName}):`, error.message);
+    return 'error';
+  }
+  return data === true ? 'ok' : 'limited';
 }

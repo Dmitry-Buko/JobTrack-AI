@@ -59,9 +59,12 @@ Deno.serve(async (req) => {
   const body = await parseBody(req, bodySchema);
   if ('error' in body) return body.error;
 
-  const allowed = await checkRateLimit(auth.supabase, auth.userId, 'interview-questions');
-  if (!allowed) {
+  const rate = await checkRateLimit(auth.supabase, 'interview-questions');
+  if (rate === 'limited') {
     return jsonError(429, 'Слишком много тренировок за последний час. Отдохните и вернитесь позже.');
+  }
+  if (rate === 'error') {
+    return jsonError(503, 'Не удалось проверить лимит запросов. Попробуйте позже.');
   }
 
   const { topic, difficulty, language, application } = body.data;
