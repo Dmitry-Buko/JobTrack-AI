@@ -5,7 +5,7 @@
  */
 
 import type { Vacancy } from './types.ts';
-import { shortHash, stripHtml, truncate } from './text.ts';
+import { isHttpUrl, shortHash, stripHtml, truncate } from './text.ts';
 
 const MAX_DESCRIPTION = 2000;
 
@@ -52,7 +52,8 @@ export function parseRemoteOkJson(data: unknown): Vacancy[] {
     const position = str(entry.position);
     const company = str(entry.company);
     const url = str(entry.url);
-    if (!position || !company || !url) continue;
+    // Ссылка попадёт в <a href> на клиенте: пропускаем только http(s).
+    if (!position || !company || !isHttpUrl(url)) continue;
 
     vacancies.push({
       id: `remoteok:${shortHash(url)}`,

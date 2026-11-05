@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatDate, formatRelativeDate, formatSalaryRange, pluralize, toDateInputValue } from './utils';
+import {
+  formatDate,
+  formatRelativeDate,
+  formatSalaryRange,
+  pluralize,
+  safeExternalUrl,
+  toDateInputValue,
+} from './utils';
 
 describe('formatDate', () => {
   it('форматирует ISO-дату в человеческий вид «5 мар»', () => {
@@ -59,5 +66,25 @@ describe('formatRelativeDate', () => {
     const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
     expect(formatRelativeDate(now)).toBe('Сегодня');
     expect(formatRelativeDate(tomorrow)).toBe('Завтра');
+  });
+});
+
+describe('safeExternalUrl', () => {
+  it('пропускает абсолютные http(s)-ссылки без изменений', () => {
+    expect(safeExternalUrl('https://example.com/job/1')).toBe('https://example.com/job/1');
+    expect(safeExternalUrl('http://example.com/job/1')).toBe('http://example.com/job/1');
+  });
+
+  it('отбрасывает небезопасные схемы', () => {
+    expect(safeExternalUrl('javascript:alert(document.cookie)')).toBeUndefined();
+    expect(safeExternalUrl('data:text/html,<script>')).toBeUndefined();
+  });
+
+  it('отбрасывает относительные пути, мусор и пустые значения', () => {
+    expect(safeExternalUrl('/applications/123')).toBeUndefined();
+    expect(safeExternalUrl('совсем не ссылка')).toBeUndefined();
+    expect(safeExternalUrl('')).toBeUndefined();
+    expect(safeExternalUrl(null)).toBeUndefined();
+    expect(safeExternalUrl(undefined)).toBeUndefined();
   });
 });

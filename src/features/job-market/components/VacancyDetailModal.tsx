@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { formatDateTime } from '@/lib/utils';
-import { cn } from '@/lib/utils';
+import { cn, safeExternalUrl } from '@/lib/utils';
 import type { MarketVacancy } from '@/features/ai/lib/schemas';
 
 import { MatchRing } from './MatchRing';
@@ -26,6 +26,8 @@ export function VacancyDetailModal({
   const SourceIcon = SOURCE_META[vacancy.source].icon;
   const position = vacancy.position || 'Позиция уточняется в посте';
   const match = vacancy.match;
+  // url приходит из внешних источников: в href уходит только http(s).
+  const externalUrl = safeExternalUrl(vacancy.url);
 
   return (
     <Modal open={open} onClose={onClose} title={position} size="md">
@@ -104,15 +106,17 @@ export function VacancyDetailModal({
       )}
 
       <div className="flex flex-col-reverse gap-2 pb-1 pt-2 sm:flex-row sm:justify-end">
-        <a
-          href={vacancy.url}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-accent px-4 text-[15px] font-semibold text-accent-contrast transition duration-200 ease-[var(--ease-ios)] hover:bg-accent-hover active:scale-[0.97] active:brightness-95"
-        >
-          <ExternalLink className="size-4" strokeWidth={1.75} aria-hidden />
-          Открыть источник
-        </a>
+        {externalUrl && (
+          <a
+            href={externalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-accent px-4 text-[15px] font-semibold text-accent-contrast transition duration-200 ease-[var(--ease-ios)] hover:bg-accent-hover active:scale-[0.97] active:brightness-95"
+          >
+            <ExternalLink className="size-4" strokeWidth={1.75} aria-hidden />
+            Открыть источник
+          </a>
+        )}
       </div>
     </Modal>
   );

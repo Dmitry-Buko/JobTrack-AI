@@ -16,7 +16,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { useToast } from '@/components/ui/Toast';
-import { formatDate, formatSalaryRange } from '@/lib/utils';
+import { formatDate, formatSalaryRange, safeExternalUrl } from '@/lib/utils';
 import { INTERVIEW_MODE_LABELS, TOPIC_LABELS } from '@/types/interview';
 import { WORK_FORMAT_LABELS, type ApplicationStatus } from '@/types/application';
 
@@ -65,6 +65,8 @@ export function ApplicationDetailPage() {
   }
 
   const relatedSessions = sessions.filter((session) => session.application_id === application.id);
+  // url — пользовательские данные: в href уходит только проверенный http(s).
+  const externalUrl = safeExternalUrl(application.url);
 
   const handleStatusChange = (status: ApplicationStatus) => {
     void (async () => {
@@ -103,11 +105,11 @@ export function ApplicationDetailPage() {
           <h1 className="max-w-2xl">{application.position}</h1>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
             <span className="font-medium text-text">{application.company}</span>
-            {application.url && (
+            {externalUrl && (
               <a
-                href={application.url}
+                href={externalUrl}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-accent hover:text-accent-hover"
               >
                 Открыть вакансию

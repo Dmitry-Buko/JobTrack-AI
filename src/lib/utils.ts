@@ -125,3 +125,19 @@ export function pluralize(count: number, forms: [string, string, string]): strin
 export function hoursAgo(iso: string): number {
   return (Date.now() - new Date(iso).getTime()) / MS_PER_HOUR;
 }
+
+/**
+ * Внешняя ссылка для <a href>: проходит только абсолютный http(s)-адрес.
+ * javascript:, data: и относительные пути возвращаются как undefined —
+ * url приходит из внешних источников (RemoteOK/WWR/профиль) и не должен
+ * попадать в href без проверки схемы.
+ */
+export function safeExternalUrl(url: string | null | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    const { protocol } = new URL(url);
+    return protocol === 'http:' || protocol === 'https:' ? url : undefined;
+  } catch {
+    return undefined;
+  }
+}

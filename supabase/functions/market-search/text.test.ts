@@ -1,7 +1,7 @@
 import { describe, it } from '@std/testing/bdd';
 import { expect } from '@std/expect';
 
-import { decodeEntities, shortHash, stripHtml, truncate } from './text.ts';
+import { decodeEntities, isHttpUrl, shortHash, stripHtml, truncate } from './text.ts';
 
 describe('stripHtml', () => {
   it('вырезает теги, превращая <br> и блочные границы в переносы', () => {
@@ -34,5 +34,17 @@ describe('shortHash', () => {
   it('детерминирован и различает ссылки', () => {
     expect(shortHash('https://a.com/1')).toBe(shortHash('https://a.com/1'));
     expect(shortHash('https://a.com/1')).not.toBe(shortHash('https://a.com/2'));
+  });
+});
+
+describe('isHttpUrl', () => {
+  it('принимает только абсолютные http(s)-ссылки', () => {
+    expect(isHttpUrl('https://example.com/job/1')).toBe(true);
+    expect(isHttpUrl('http://example.com/job/1')).toBe(true);
+    expect(isHttpUrl('javascript:alert(document.cookie)')).toBe(false);
+    expect(isHttpUrl('data:text/html,<script>')).toBe(false);
+    expect(isHttpUrl('/relative/path')).toBe(false);
+    expect(isHttpUrl('не ссылка')).toBe(false);
+    expect(isHttpUrl('')).toBe(false);
   });
 });

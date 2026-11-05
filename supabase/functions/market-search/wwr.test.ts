@@ -51,4 +51,24 @@ describe('parseWwrRss', () => {
   it('пропускает записи без ссылки или заголовка', () => {
     expect(parseWwrRss(feed)).toHaveLength(2);
   });
+
+  it('отбрасывает записи с небезопасной схемой ссылки (javascript:)', () => {
+    const malicious = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel>
+  <item>
+    <title>Evil: Frontend Engineer (Anywhere)</title>
+    <link>javascript:alert(document.cookie)</link>
+    <description>Подозрительная запись с достаточно длинным описанием вакансии.</description>
+  </item>
+  <item>
+    <title>Good: Backend Developer</title>
+    <link>https://weworkremotely.com/remote-jobs/789-good-backend</link>
+    <description>Node.js and PostgreSQL stack.</description>
+  </item>
+</channel></rss>`;
+    const vacancies = parseWwrRss(malicious);
+    expect(vacancies).toHaveLength(1);
+    expect(vacancies[0].company).toBe('Good');
+    expect(vacancies[0].url).toBe('https://weworkremotely.com/remote-jobs/789-good-backend');
+  });
 });

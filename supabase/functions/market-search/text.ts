@@ -83,3 +83,17 @@ export function shortHash(value: string): string {
   }
   return (hash >>> 0).toString(36);
 }
+
+/**
+ * Ссылка вакансии абсолютная и ведёт на http(s)-источник.
+ * Отсекает javascript:, data: и мусор вроде «не ссылка» — внешний url
+ * попадает в <a href> на клиенте, поэтому пропускаем только безопасные схемы.
+ */
+export function isHttpUrl(value: string): boolean {
+  try {
+    const { protocol } = new URL(value);
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
+}

@@ -5,7 +5,7 @@
  */
 
 import type { Vacancy } from './types.ts';
-import { decodeEntities, shortHash, stripHtml, truncate } from './text.ts';
+import { decodeEntities, isHttpUrl, shortHash, stripHtml, truncate } from './text.ts';
 
 const MAX_DESCRIPTION = 2000;
 
@@ -45,7 +45,8 @@ export function parseWwrRss(xml: string): Vacancy[] {
   for (const item of items) {
     const title = tagValue(item, 'title');
     const url = tagValue(item, 'link');
-    if (!title || !url) continue;
+    // Ссылка попадёт в <a href> на клиенте: пропускаем только http(s).
+    if (!title || !isHttpUrl(url)) continue;
 
     const { company, position, location } = parseTitle(title);
     vacancies.push({

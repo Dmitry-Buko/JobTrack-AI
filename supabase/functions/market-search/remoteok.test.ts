@@ -63,4 +63,15 @@ describe('parseRemoteOkJson', () => {
     ]);
     expect(vacancy.salary).toBe('');
   });
+
+  it('отбрасывает записи с небезопасной схемой ссылки (javascript:) и мусорные url', () => {
+    const vacancies = parseRemoteOkJson([
+      { position: 'Frontend', company: 'Evil', url: 'javascript:alert(1)' },
+      { position: 'Backend', company: 'Broken', url: 'совсем не ссылка' },
+      { position: 'DevOps', company: 'Good', url: 'https://remoteok.com/remote-jobs/11-devops' },
+    ]);
+    expect(vacancies).toHaveLength(1);
+    expect(vacancies[0].company).toBe('Good');
+    expect(vacancies[0].url).toBe('https://remoteok.com/remote-jobs/11-devops');
+  });
 });
