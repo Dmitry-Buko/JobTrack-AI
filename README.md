@@ -1,13 +1,17 @@
 # JobTrack AI
 
-Веб-приложение для управления поиском работы и подготовки к техническим собеседованиям с помощью ИИ: вакансии и Kanban-доска, AI-интервьюер в текстовом и голосовом режимах, анализ требований вакансий и история тренировок с отчётами.
+[![CI](https://github.com/Dmitry-Buko/JobTrack-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/Dmitry-Buko/JobTrack-AI/actions/workflows/ci.yml)
+
+Веб-приложение для управления поиском работы и подготовки к техническим собеседованиям с помощью ИИ: вакансии и Kanban-доска, AI-интервьюер в текстовом и голосовом режимах, поиск вакансий с AI-матчингом, анализ требований вакансий и история тренировок с отчётами.
 
 ## Возможности
 
 - **Авторизация** — регистрация, вход, восстановление пароля, защищённые маршруты, сохранение сессии (Supabase Auth).
 - **Вакансии** — CRUD, 7 статусов, Kanban-доска с drag-and-drop и меню смены статуса, поиск, фильтры, сортировка.
 - **AI Interview Coach** — текстовый режим с оценкой ответов по 5 критериям (1–5 или «Недостаточно данных»), подсказки, пропуск вопросов, промежуточный и итоговый отчёты; голосовой режим на Gemini Live API (WebSocket) с транскрипцией диалога и перебиванием ИИ.
+- **AI-поиск вакансий** — агрегатор Telegram/RemoteOK/WeWorkRemotely с гео-фильтром по Беларуси и AI-матчингом под профиль (процент совпадения, недостающие навыки).
 - **AI-анализ вакансии** — сопоставление описания вакансии с профилем навыков, история анализов.
+- **Сопроводительные письма** — генерация письма под вакансию и профиль кандидата.
 - **Профиль навыков** — самооценка уровней, используется для персонализации.
 - **История тренировок** — фильтры по теме/формату/дате, детальный просмотр диалога и отчёта.
 - **Дашборд** — метрики поиска работы, ближайшие события, слабые темы.
@@ -34,6 +38,7 @@ npm run dev
 | `npm run lint` | ESLint |
 | `npm run test` | Vitest (однократно) |
 | `npm run check` | typecheck + lint + test + build |
+| `npm run check:functions` | Edge Functions: `deno check` + `deno lint` + `deno test` (нужен установленный [Deno](https://deno.com) 2.x) |
 
 ## Настройка Supabase
 
@@ -44,9 +49,9 @@ npm run dev
    VITE_SUPABASE_ANON_KEY=<anon key>
    ```
    Это публичные значения для браузера; данные защищает RLS, а не секретность ключа.
-3. **Схема БД.** Примените миграции из `supabase/migrations/` по порядку:
-   - через Supabase CLI: `supabase link --project-ref <ref>` затем `supabase db push`;
-   - или откройте SQL Editor в панели Supabase и выполните содержимое файлов `0001…0004` по очереди.
+3. **Схема БД.** Примените миграции из `supabase/migrations/` по порядку (`0001` … `0008`):
+   - предпочтительно через Supabase CLI: `supabase link --project-ref <ref>`, затем `supabase db push`;
+   - или откройте SQL Editor в панели Supabase и выполните содержимое файлов `0001`–`0008` по очереди.
 4. **Включите email-авторизацию** (Authentication → Providers → Email). Для быстрой разработки можно отключить подтверждение email (Authentication → Providers → Email → Confirm email).
 
 ## Настройка AI (Google Gemini)
@@ -56,15 +61,17 @@ npm run dev
    ```bash
    supabase secrets set GEMINI_API_KEY=AIza...
    ```
-3. Задеплойте Edge Functions:
+3. Задеплойте все Edge Functions:
    ```bash
    supabase functions deploy interview-questions
    supabase functions deploy evaluate-answer
    supabase functions deploy session-report
    supabase functions deploy analyze-job
    supabase functions deploy realtime-session
+   supabase functions deploy generate-cover-letter
+   supabase functions deploy market-search
    ```
-   Необходима версия CLI ≥ 1.160 (runtime Deno). Функции уже проверяют JWT пользователя — дополнительная настройка аутентификации не нужна.
+   Необходима версия CLI ≥ 1.160 (runtime Deno). Функции уже проверяют JWT пользователя — дополнительная настройка аутентификации не нужна. Проверить функции локально можно командой `npm run check:functions` (deno check + lint + test).
 
 Модели и лимиты настраиваются переменными окружения функций (не хардкодятся в коде):
 
@@ -75,9 +82,20 @@ npm run dev
 | `MAX_QUESTIONS` | `10` | потолок вопросов в тренировке |
 | `AI_RATE_LIMIT_PER_HOUR` | `60` | лимит AI-запросов на пользователя в час **для каждой функции отдельно** |
 
+Модели по умолчанию (`gemini-3.8-flash`, `gemini-3.8-live`) проверены по актуальной документации [Gemini API](https://ai.google.dev/gemini-api/docs/models).
+
+## Сборка и деплой (Netlify)
+
+Сборка настраивается в `netlify.toml` (`npm run build` → `dist`). Переменные окружения задаются в Netlify UI (Site settings → Environment):
+
+- `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` — доступ к Supabase;
+- `VITE_SITE_URL` — публичный адрес сайта (`https://…`): подставляется в `og:image` при сборке вместо плейсхолдера `YOUR-NETLIFY-DOMAIN`. Без переменной в мета-теге останется плейсхолдер — задайте её после привязки домена.
+
+Заголовки безопасности (CSP, X-Frame-Options, Permissions-Policy и др.) применяются автоматически из `netlify.toml`.
+
 ## Безопасность
 
-- Постоянный ключ Gemini хранится только в секретах Supabase; клиенту голосовой режим выдаёт краткосрочный ephemeral-токен (`realtime-session`), а инструкции интервьюера фиксируются на сервере в `liveConnectConstraints`.
+- Постоянный ключ Gemini хранится только в секретах Supabase; клиенту голосовой режим выдаёт краткосрочный ephemeral-токен (`realtime-session`), а инструкции интервьюера и параметры модели запекаются в токен на сервере (поле `bidiGenerateContentSetup`).
 - RLS включён на всех пользовательских таблицах; доступ к сообщениям — через принадлежность сессии, к анализам — через вакансию.
 - Edge Functions проверяют JWT пользователя; AI-запросы рейт-лимитятся атомарной RPC `consume_ai_quota` (миграция `0006`): подсчёт и вставка записи `ai_usage` в одной транзакции под advisory-локом, поэтому параллельные запросы не обходят лимит. Лимит применяется **к каждой функции отдельно** (по умолчанию 60/час, настраивается `AI_RATE_LIMIT_PER_HOUR`). Если RPC недоступна, функция отвечает 503 — лимит не отключается (fail-closed).
 - Записи `ai_usage` старше 24 часов удаляет `public.cleanup_ai_usage()`: ежедневно в 03:17 UTC через `pg_cron` (если расширение доступно в проекте), либо вручную — `select public.cleanup_ai_usage();` в SQL Editor.
@@ -95,8 +113,8 @@ src/
   services/     # голосовой режим (Gemini Live, WebSocket)
   types/        # доменные типы (application, interview, profile, job-analysis)
 supabase/
-  migrations/   # схема PostgreSQL + RLS
-  functions/    # Edge Functions (Deno): 5 AI-функций + shared
+  migrations/   # схема PostgreSQL + RLS (0001–0008)
+  functions/    # Edge Functions (Deno): 6 AI-функций + market-search + shared
 ```
 
 Форматы jsonb-полей (`interview_sessions.report`, `interview_messages.evaluation`, `application_analyses.result`) описаны в `src/types` и валидируются zod-схемами в `src/features/ai/lib/schemas.ts` — некорректный ответ AI не ломает интерфейс.
