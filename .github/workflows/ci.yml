@@ -1,0 +1,57 @@
+# CI: веб-клиент (Node LTS) и Edge Functions (Deno) проверяются независимо.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  web:
+    name: Веб-клиент (typecheck + lint + test + build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Установка зависимостей
+        run: npm ci
+
+      - name: Типы (tsc)
+        run: npm run typecheck
+
+      - name: Линтер (eslint)
+        run: npm run lint
+
+      - name: Тесты (vitest)
+        run: npm run test
+
+      - name: Сборка (vite)
+        run: npm run build
+
+  functions:
+    name: Edge Functions (deno check + lint + test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: supabase/functions
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Типы (deno check)
+        run: deno check
+
+      - name: Линтер (deno lint)
+        run: deno lint
+
+      - name: Тесты (deno test)
+        run: deno test --allow-env
