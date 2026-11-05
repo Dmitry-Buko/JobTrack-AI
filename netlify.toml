@@ -6,3 +6,20 @@
 
 # Переменные сборки задаём в Netlify UI (Site settings → Environment):
 # VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+# VITE_SITE_URL — публичный адрес сайта (https://...), подставляется
+# в og:image при сборке; без него остаётся плейсхолдер YOUR-NETLIFY-DOMAIN.
+
+# Заголовки безопасности для всех маршрутов.
+# CSP: скрипты/стили/шрифты — только свои (инлайн-скриптов нет:
+# инициализация темы вынесена в /theme-init.js); connect-src — Supabase
+# (REST + realtime) и Gemini Live API (текстовый AI ходит через Edge
+# Functions, а голосовой WebSocket браузер открывает напрямую);
+# worker-src blob: — AudioWorklet голосового режима и service worker.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "DENY"
+    Permissions-Policy = "microphone=(self)"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com wss://generativelanguage.googleapis.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"

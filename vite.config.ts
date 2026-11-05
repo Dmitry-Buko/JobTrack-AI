@@ -3,13 +3,29 @@ import { fileURLToPath, URL } from 'node:url';
 
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+
+/**
+ * Подставляет публичный домен из переменной сборки VITE_SITE_URL в og:image
+ * вместо плейсхолдера YOUR-NETLIFY-DOMAIN. Без переменной плейсхолдер
+ * остаётся — видимый сигнал, что домен ещё не настроен (см. README).
+ */
+function ogImageSiteUrl(): Plugin {
+  return {
+    name: 'og-image-site-url',
+    transformIndexHtml(html) {
+      const site = process.env.VITE_SITE_URL?.replace(/\/+$/, '');
+      return site ? html.replaceAll('https://YOUR-NETLIFY-DOMAIN', site) : html;
+    },
+  };
+}
 
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    ogImageSiteUrl(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'og-image.png'],

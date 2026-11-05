@@ -13,28 +13,17 @@
     <meta name="theme-color" content="#007aff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0a84ff" media="(prefers-color-scheme: dark)" />
 
-    <!-- Open Graph / Twitter: карточка ссылки в мессенджерах и соцсетях -->
+    <!-- Open Graph / Twitter: карточка ссылки в мессенджерах и соцсетях.
+         Домен подставляется при сборке из переменной VITE_SITE_URL
+         (см. vite.config.ts); без неё остаётся заметный плейсхолдер. -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="JobTrack AI" />
     <meta property="og:title" content="JobTrack AI" />
     <meta property="og:description" content="Вакансии, отклики и AI-тренажёр собеседований в одном месте" />
-    <!-- ЗАМЕНИТЕ домен на свой Netlify-адрес после первого деплоя -->
     <meta property="og:image" content="https://YOUR-NETLIFY-DOMAIN/og-image.png" />
     <meta name="twitter:card" content="summary_large_image" />
 
-    <script>
-      (function () {
-        try {
-          var stored = localStorage.getItem('jobtrack-theme');
-          var dark = stored
-            ? stored === 'dark'
-            : window.matchMedia('(prefers-color-scheme: dark)').matches;
-          if (dark) document.documentElement.classList.add('dark');
-        } catch (e) {
-          /* localStorage недоступен — остаётся светлая тема */
-        }
-      })();
-    </script>
+    <script src="/theme-init.js"></script>
   </head>
   <body>
     <div id="root"></div>
