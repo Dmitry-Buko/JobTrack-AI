@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { describe, it } from '@std/testing/bdd';
+import { expect } from '@std/expect';
 
 import { GEO_TRUSTED_CHANNELS, isBelarusVacancy } from './belarus.ts';
 import type { Vacancy } from './types.ts';

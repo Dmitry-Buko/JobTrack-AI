@@ -1,4 +1,4 @@
-import { z } from 'npm:zod@3';
+import { z } from 'zod';
 
 import { requireUser } from '../shared/auth.ts';
 import { handleOptions, jsonError, jsonOk } from '../shared/cors.ts';
@@ -7,7 +7,6 @@ import {
   difficultyExpectations,
   languageName,
   topicLabel,
-  type ApplicationContext,
 } from '../shared/interview.ts';
 import { liveModel, maxQuestions } from '../shared/gemini.ts';
 import { checkRateLimit } from '../shared/ratelimit.ts';

@@ -7,7 +7,7 @@ export function handleOptions(): Response {
   return new Response('ok', { headers: corsHeaders });
 }
 
-export function jsonOk(data: Record<string, unknown>): Response {
+export function jsonOk(data: unknown): Response {
   return new Response(JSON.stringify(data), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });

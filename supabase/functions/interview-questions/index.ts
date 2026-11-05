@@ -9,10 +9,9 @@ import {
   INTERVIEWER_SYSTEM,
   languageName,
   topicLabel,
-  type ApplicationContext,
 } from '../shared/interview.ts';
 import { JS_SUBTOPIC_KEYS, subtopicLabel } from '../shared/subtopics.ts';
-import { z } from 'npm:zod@3';
+import { z } from 'zod';
 
 const bodySchema = z.object({
   topic: z.enum([

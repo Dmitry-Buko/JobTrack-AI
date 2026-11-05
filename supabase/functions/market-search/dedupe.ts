@@ -54,8 +54,9 @@ export function dedupeVacancies(vacancies: Vacancy[]): Vacancy[] {
     let duplicateOf = -1;
 
     for (let i = 0; i < kept.length; i += 1) {
-      if (key && keptKeys[i]) {
-        if (jaccard(key, keptKeys[i]) >= JACCARD_THRESHOLD) {
+      const existingKey = keptKeys[i];
+      if (key && existingKey) {
+        if (jaccard(key, existingKey) >= JACCARD_THRESHOLD) {
           duplicateOf = i;
           break;
         }

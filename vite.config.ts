@@ -62,5 +62,8 @@ export default defineConfig({
     setupFiles: ['./src/setupTests.ts'],
     css: false,
     globals: true,
+    // Только клиентские тесты. Тесты Edge Functions (supabase/functions)
+    // написаны под Deno и запускаются командой npm run check:functions.
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
   },
 });

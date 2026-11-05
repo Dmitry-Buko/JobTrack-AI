@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { describe, it } from '@std/testing/bdd';
+import { expect } from '@std/expect';
 
 import { parseWwrRss } from './wwr.ts';
 
@@ -34,9 +35,9 @@ describe('parseWwrRss', () => {
       position: 'Senior Frontend Engineer',
       location: 'Anywhere',
       url: 'https://weworkremotely.com/remote-jobs/123-acme-senior-frontend',
-      description: expect.stringContaining('React engineer'),
       publishedAt: '2026-11-01T10:00:00.000Z',
     });
+    expect(vacancy.description).toContain('React engineer');
     expect(vacancy.description).not.toContain('<p>');
   });
 

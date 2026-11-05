@@ -1,4 +1,4 @@
-import { z } from 'npm:zod@3';
+import { z } from 'zod';
 
 import { jsonError } from './cors.ts';
 
@@ -13,8 +13,14 @@ export function clampText(value: string, max = MAX_TEXT_LENGTH): string {
  * Строка, которая обрезается до max ещё ДО валидации: сверхдлинный
  * пользовательский текст (например, голосовая диктовка) не должен
  * ронять запрос 400-й ошибкой схемы.
+ *
+ * Явный тип возврата важен: без него вывод типа z.preprocess
+ * деградирует до unknown в consumer'ах (deno check).
  */
-export function clampedString(max: number, options: { min?: number } = {}) {
+export function clampedString(
+  max: number,
+  options: { min?: number } = {},
+): z.ZodType<string, z.ZodTypeDef, unknown> {
   const base = options.min != null ? z.string().min(options.min).max(max) : z.string().max(max);
   return z.preprocess(
     (value) => (typeof value === 'string' ? clampText(value, max) : value),
@@ -24,10 +30,10 @@ export function clampedString(max: number, options: { min?: number } = {}) {
 
 export type BodyResult<T> = { data: T } | { error: Response };
 
-export async function parseBody<T>(
+export async function parseBody<S extends z.ZodTypeAny>(
   req: Request,
-  schema: z.ZodType<T>,
-): Promise<BodyResult<T>> {
+  schema: S,
+): Promise<BodyResult<z.output<S>>> {
   let raw: unknown;
   try {
     raw = await req.json();
