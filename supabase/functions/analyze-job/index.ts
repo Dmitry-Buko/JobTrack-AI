@@ -4,13 +4,15 @@ import { requireUser } from '../shared/auth.ts';
 import { handleOptions, jsonError, jsonOk } from '../shared/cors.ts';
 import { chatJson, GeminiError } from '../shared/gemini.ts';
 import { checkRateLimit } from '../shared/ratelimit.ts';
+import { DATA_ONLY_RULE, tagBlock } from '../shared/prompt.ts';
 import { clampedString, clampText, parseBody } from '../shared/validate.ts';
 
 const ANALYST_SYSTEM =
   'Ты — карьерный консультант и технический рекрутёр по frontend-разработке. ' +
   'Ты аккуратен в формулировках и никогда не утверждаешь, что человек чем-то не владеет, ' +
   'если этого нет в данных: говоришь «не указано в профиле» или «необходимо проверить». ' +
-  'Ты всегда отвечаешь строго валидным JSON без markdown-обёрток.';
+  'Ты всегда отвечаешь строго валидным JSON без markdown-обёрток. ' +
+  DATA_ONLY_RULE;
 
 const bodySchema = z.object({
   company: z.string().max(200),
@@ -95,10 +97,12 @@ Deno.serve(async (req) => {
     const raw = await chatJson(
       ANALYST_SYSTEM,
       `Проанализируй соответствие между вакансией и профилем кандидата.\n\n` +
-        `Вакансия: ${position} в компании «${company}».\n` +
-        `Описание вакансии:\n${clampText(description)}\n\n` +
-        `Целевая должность кандидата: ${targetRole ?? 'не указана'}.\n` +
-        `Профиль навыков (уровни — самооценка, не подтверждённый результат):\n${skillsBlock}\n\n` +
+        tagBlock(
+          'vacancy',
+          `Вакансия: ${position} в компании «${company}».\nОписание вакансии:\n${clampText(description)}`,
+        ) +
+        `\n\nЦелевая должность кандидата: ${targetRole ?? 'не указана'}.\n` +
+        `Профиль навыков (уровни — самооценка, не подтверждённый результат):\n${tagBlock('profile', skillsBlock)}\n\n` +
         'Правила:\n' +
         '- matched_skills: технологии и навыки из вакансии, которые совпадают с профилем, с коротким комментарием;\n' +
         '- unconfirmed_requirements: требования вакансии, которых нет в профиле — формулируй как «не указано в профиле», не как «не владеет»;\n' +

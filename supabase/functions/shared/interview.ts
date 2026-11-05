@@ -1,5 +1,7 @@
 /** Общие данные и промпт-строители для AI-тренажёра. */
 
+import { DATA_ONLY_RULE, tagBlock } from './prompt.ts';
+
 export interface ApplicationContext {
   company: string;
   position: string;
@@ -38,16 +40,25 @@ export function difficultyExpectations(difficulty: string): string {
   }
 }
 
-/** Блок контекста вакансии для промптов. Ничего не выдумываем сверх описания. */
+/**
+ * Блок контекста вакансии для промптов. Поля пользователя (позиция,
+ * компания, описание) — внутри тега <application> и санитизированы;
+ * ничего не выдумываем сверх описания.
+ */
 export function applicationBlock(application: ApplicationContext | null): string {
   if (!application) return '';
-  const description = application.description
-    ? `\nОписание вакансии (используй только требования из него, не выдумывай):\n${application.description}`
-    : '';
-  return `\n\nКонтекст вакансии: ${application.position} в компании «${application.company}».${description}`;
+  const header = `Позиция: ${application.position} в компании «${application.company}».`;
+  const body = application.description
+    ? `${header}\nОписание вакансии:\n${application.description}`
+    : header;
+  return (
+    `\n\nКонтекст вакансии (используй только эти данные, не выдумывай требований):\n` +
+    tagBlock('application', body)
+  );
 }
 
 export const INTERVIEWER_SYSTEM =
   'Ты — опытный, доброжелательный технический интервьюер по frontend-разработке. ' +
   'Ты честно оцениваешь ответы, хвалишь за сильные стороны и мягко указываешь на пробелы. ' +
-  'Ты всегда отвечаешь строго валидным JSON без markdown-обёрток.';
+  'Ты всегда отвечаешь строго валидным JSON без markdown-обёрток. ' +
+  DATA_ONLY_RULE;

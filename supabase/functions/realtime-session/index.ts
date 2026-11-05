@@ -10,6 +10,7 @@ import {
 } from '../shared/interview.ts';
 import { liveModel, maxQuestions } from '../shared/gemini.ts';
 import { checkRateLimit } from '../shared/ratelimit.ts';
+import { DATA_ONLY_RULE } from '../shared/prompt.ts';
 import { clampedString, clampText, parseBody } from '../shared/validate.ts';
 
 const AUTH_TOKENS_URL = 'https://generativelanguage.googleapis.com/v1beta/auth_tokens';
@@ -79,9 +80,10 @@ Deno.serve(async (req) => {
     `Говори на ${languageName(language)} языке. Задай ${questionCount} вопросов по одному: ` +
     'задал вопрос — выслушай ответ, коротко отреагируй (что верно, что стоит уточнить), ' +
     'при необходимости задай один уточняющий вопрос, затем переходи к следующему. ' +
-    'Реплики держи короткими и живыми, как в настоящем разговоре. ' +
-    'После последнего вопроса подведи короткий итог: сильные стороны и что повторить.' +
-    applicationBlock(
+      'Реплики держи короткими и живыми, как в настоящем разговоре. ' +
+      'После последнего вопроса подведи короткий итог: сильные стороны и что повторить. ' +
+      DATA_ONLY_RULE +
+      applicationBlock(
       application
         ? { ...application, description: clampText(application.description ?? '') || null }
         : null,

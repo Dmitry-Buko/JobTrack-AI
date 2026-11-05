@@ -4,6 +4,7 @@
  * строят промпт и нормализуют ответ модели, что легко тестируется.
  */
 
+import { DATA_ONLY_RULE, tagBlock } from '../shared/prompt.ts';
 import type { MatchResult, Vacancy, VacancyProfile } from './types.ts';
 import { truncate } from './text.ts';
 
@@ -14,14 +15,15 @@ const MAX_SUMMARY = 300;
 export function buildMatcherSystem(): string {
   return (
     'Ты — карьерный консультант технического рекрутинга. Тебе дают профиль соискателя ' +
-    'и список вакансий с номерами. Для каждой вакансии оцени, насколько она подходит ' +
-    'проффилю: процент совпадения (0–100), совпавшие навыки, недостающие навыки и ' +
-    'короткое пояснение по-русски. Если позиция явно не по профилю — процент до 20 и ' +
-    'пояснение одной строкой. Для Telegram-постов без компании и позиции извлеки их ' +
-    'из текста (company — кто нанимает, position — название роли). ' +
+    'и список вакансий в тегах <vacancy index="N">. Для каждой вакансии оцени, насколько ' +
+    'она подходит профилю: процент совпадения (0–100), совпавшие навыки, недостающие ' +
+    'навыки и короткое пояснение по-русски. Если позиция явно не по профилю — процент ' +
+    'до 20 и пояснение одной строкой. Для Telegram-постов без компании и позиции извлеки ' +
+    'их из текста (company — кто нанимает, position — название роли). ' +
     'Отвечай только JSON: {"matches":[{"i":<номер>,"company":"...","position":"...",' +
     '"percent":<0-100>,"matched":["..."],"missing":["..."],"summary":"..."}]}. ' +
-    'Элемент для каждой вакансии из списка, без пропусков.'
+    'Элемент для каждой вакансии из списка, без пропусков. ' +
+    DATA_ONLY_RULE
   );
 }
 
@@ -40,7 +42,9 @@ export function buildMatchPrompt(profile: VacancyProfile, vacancies: Vacancy[]):
     if (vacancy.salary) parts.push(vacancy.salary);
     const header = parts.join(' | ');
     const body = truncate(vacancy.description, MAX_DESCRIPTION_IN_PROMPT) || 'без описания';
-    return `${header}\n${body}`;
+    // Внешний текст (TG-посты, описания вакансий) — внутри тега и без
+    // наших разделителей: инструкции из данных не выполняются.
+    return tagBlock('vacancy', `${header}\n${body}`, `index="${index + 1}"`);
   });
 
   return (

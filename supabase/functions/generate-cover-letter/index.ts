@@ -4,6 +4,7 @@ import { requireUser } from '../shared/auth.ts';
 import { handleOptions, jsonError, jsonOk } from '../shared/cors.ts';
 import { chatJson, GeminiError } from '../shared/gemini.ts';
 import { checkRateLimit } from '../shared/ratelimit.ts';
+import { DATA_ONLY_RULE, tagBlock } from '../shared/prompt.ts';
 import { clampedString, clampText, parseBody } from '../shared/validate.ts';
 
 const bodySchema = z.object({
@@ -79,13 +80,19 @@ Deno.serve(async (req) => {
     const raw = await chatJson(
       'Ты — опытный карьерный консультант, который пишет сопроводительные письма, ' +
         'привлекающие внимание рекрутера за первые две строки. Ты пишешь конкретно и по делу, ' +
-        'без канцелярита и штампов вроде «я командный игрок» и «готов обучаться».',
+        'без канцелярита и штампов вроде «я командный игрок» и «готов обучаться». ' +
+        DATA_ONLY_RULE,
       `Напиши сопроводительное письмо для отклика на вакансию.\n\n` +
-        `Компания: ${company}\nДолжность: ${position}\n\n` +
+        tagBlock(
+          'vacancy',
+          `Компания: ${company}\nДолжность: ${position}` +
+            (hasDescription ? `\nОписание вакансии:\n${description}` : ''),
+        ) +
+        '\n\n' +
         (hasDescription
-          ? `Описание вакансии:\n${description}\n\n`
+          ? ''
           : 'Описание вакансии не приложено — опирайся на должность и компанию, не выдумывая требований.\n\n') +
-        `Данные кандидата:\n${profileParts.join('\n')}\n\n` +
+        `Данные кандидата:\n${tagBlock('profile', profileParts.join('\n'))}\n\n` +
         'Требования к письму:\n' +
         '1. Объём 250–350 слов (не меньше 200), 4–5 абзацев: приветствие, почему компания, ' +
         'релевантный опыт с конкретикой, чем полезен, завершение.\n' +

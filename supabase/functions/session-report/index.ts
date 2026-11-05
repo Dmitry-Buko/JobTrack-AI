@@ -10,6 +10,7 @@ import {
 } from '../shared/interview.ts';
 import { chatJson, GeminiError } from '../shared/gemini.ts';
 import { checkRateLimit } from '../shared/ratelimit.ts';
+import { sanitizePromptText, tagBlock } from '../shared/prompt.ts';
 import { clampedString, clampText, parseBody } from '../shared/validate.ts';
 
 const messageSchema = z.object({
@@ -48,12 +49,12 @@ const reportSchema = z.object({
   conclusion: z.string(),
 });
 
-/** Компактная выжимка диалога для промпта. */
+/** Компактная выжимка диалога для промпта (реплики пользователя — в теге <transcript>). */
 function transcript(messages: z.infer<typeof messageSchema>[]): string {
   return messages
     .map((message) => {
       const prefix = message.role === 'assistant' ? 'Интервьюер' : 'Кандидат';
-      let line = `${prefix}: ${clampText(message.content, 1500)}`;
+      let line = `${prefix}: ${clampText(sanitizePromptText(message.content), 1500)}`;
       if (message.evaluation && typeof message.evaluation === 'object') {
         const scores = (message.evaluation as { scores?: Record<string, { score?: number }> })
           .scores;
@@ -137,7 +138,7 @@ Deno.serve(async (req) => {
       `Составь итоговый отчёт по технической тренировке.\n\n` +
         `Тема: ${topicLabel(topic)}. Глубина: ${difficultyExpectations(difficulty)}.\n` +
         `Отчёт пиши на ${languageName(language)} языке.\n\n` +
-        `Стенограмма диалога:\n${transcript(messages)}\n\n` +
+        `Стенограмма диалога:\n${tagBlock('transcript', transcript(messages))}\n\n` +
         'В summary дай 2–3 предложения об общем впечатлении. ' +
         'В strengths — сильные стороны кандидата. В weak_topics — темы с пробелами. ' +
         'В weak_answers — 1–3 примера неточных ответов (question + короткое описание проблемы issue). ' +

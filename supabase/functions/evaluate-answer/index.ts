@@ -11,6 +11,7 @@ import {
 import { JS_SUBTOPIC_KEYS, subtopicLabel } from '../shared/subtopics.ts';
 import { chatJson, GeminiError } from '../shared/gemini.ts';
 import { checkRateLimit } from '../shared/ratelimit.ts';
+import { tagBlock } from '../shared/prompt.ts';
 import { clampedString, clampText, parseBody } from '../shared/validate.ts';
 
 const bodySchema = z.object({
@@ -131,7 +132,7 @@ Deno.serve(async (req) => {
       // Режим подсказки: направляем, но не раскрываем полный ответ.
       const raw = await chatJson(
         INTERVIEWER_SYSTEM,
-        `Вопрос собеседования (${themeText}):\n${questionText}\n\n` +
+        `Вопрос собеседования (${themeText}):\n${tagBlock('question', questionText)}\n\n` +
           `Дай короткую подсказку, которая направит кандидата к ответу, но не раскрывает сам ответ. ` +
           `Подсказку пиши на ${languageName(language)} языке.\n` +
           'Верни JSON вида {"hint": "..."}',
@@ -152,7 +153,7 @@ Deno.serve(async (req) => {
       INTERVIEWER_SYSTEM,
         `Оцени ответ кандидата на вопрос технического собеседования.\n\n` +
         `Тема: ${themeText}. Ожидаемая глубина: ${difficultyExpectations(difficulty)}.\n` +
-        `Вопрос:\n${questionText}\n\nОтвет кандидата:\n${answerText}\n\n` +
+        `Вопрос:\n${tagBlock('question', questionText)}\n\nОтвет кандидата:\n${tagBlock('answer', answerText)}\n\n` +
         `Пояснения пиши на ${languageName(language)} языке. Оцени по пяти критериям ` +
         '(correctness — корректность, completeness — полность, understanding — понимание сути вопроса, ' +
         'practical_application — практическое применение, explanation_quality — качество объяснения). ' +
