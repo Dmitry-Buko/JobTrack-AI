@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { BELARUS_CHANNELS, isBelarusVacancy } from './belarus.ts';
+import { GEO_TRUSTED_CHANNELS, isBelarusVacancy } from './belarus.ts';
 import type { Vacancy } from './types.ts';
 
 function vacancy(overrides: Partial<Vacancy> = {}): Vacancy {
@@ -44,7 +44,19 @@ describe('isBelarusVacancy', () => {
         vacancy({ source: 'telegram', channel: 'devby', description: 'Ищем разработчика, удалённо.' }),
       ),
     ).toBe(true);
-    expect(BELARUS_CHANNELS.has('devby')).toBe(true);
+    expect(GEO_TRUSTED_CHANNELS.has('devby')).toBe(true);
+  });
+
+  it('доверяет пользовательскому RU-каналу vacancy_it_ulbitv', () => {
+    expect(
+      isBelarusVacancy(
+        vacancy({
+          source: 'telegram',
+          channel: 'vacancy_it_ulbitv',
+          description: 'Подборка вакансий на 09.10.2026: Senior .NET (220 000 - 240 000 Р).',
+        }),
+      ),
+    ).toBe(true);
   });
 
   it('проверяет текстом посты остальных TG-каналов', () => {

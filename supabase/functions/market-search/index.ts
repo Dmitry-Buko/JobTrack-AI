@@ -65,14 +65,15 @@ function cacheKey(data: z.infer<typeof bodySchema>): string {
 }
 
 /**
- * Каналы по умолчанию проверены живыми 2026-11-02 (t.me/s отдаёт посты анонимно):
- * devby — IT-вакансии Беларуси. Английские worldwide-подборки убраны: поиск
- * ограничен Республикой Беларусь, см. belarus.ts.
+ * Каналы по умолчанию проверены живыми (t.me/s отдаёт посты анонимно):
+ * devby — IT-вакансии Беларуси (2026-11-02); vacancy_it_ulbitv — RU-подборки,
+ * добавлен по просьбе пользователя 2026-11-04, гео-фильтром не отсекается
+ * (см. GEO_TRUSTED_CHANNELS в belarus.ts).
  * Переопределяется секретом TG_CHANNELS или полем channels в запросе.
  */
 function telegramChannels(requested?: string[]): string[] {
   if (requested && requested.length > 0) return requested;
-  const fromEnv = (Deno.env.get('TG_CHANNELS') ?? 'devby')
+  const fromEnv = (Deno.env.get('TG_CHANNELS') ?? 'devby,vacancy_it_ulbitv')
     .split(',')
     .map((name) => name.trim().replace(/^@/, ''))
     .filter(Boolean);
